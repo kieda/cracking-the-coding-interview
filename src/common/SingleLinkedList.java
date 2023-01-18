@@ -8,7 +8,7 @@ import java.util.function.UnaryOperator;
  * Basic singly linked list that acts as a stack.
  * @param <X>
  */
-public class SingleLinkedList<X> {
+public class SingleLinkedList<X> implements SimpleStack<X>{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         HashSet<Node<X>> loopDetection = new HashSet<>();
@@ -16,13 +16,13 @@ public class SingleLinkedList<X> {
         Node<X> node = getHead();
         while(node != null) {
             if(loopDetection.contains(node)) {
-                sb.append("LOOP<").append(node.item).append(">");
+                sb.append("LOOP<").append(node.getItem()).append(">");
                 break;
             } else {
                 loopDetection.add(node);
             }
-            sb.append(node.item);
-            node = node.next;
+            sb.append(node.getItem());
+            node = node.getNext();
             if(node != null)
                 sb.append(" -> ");
         }
@@ -104,14 +104,16 @@ public class SingleLinkedList<X> {
     private Node<X> head;
     public void addFirst(X item) {
         Node<X> addition = new Node<>(item);
-        addition.setNext(head);
-        head = addition;
+        addition.setNext(getHead());
+        setHead(addition);
     }
-    public void removeFirst(X item) {
-        head = head.getNext();
+    public void removeFirst() {
+        if(getHead() == null)
+            throw new EmptyStackException();
+        setHead(getHead().getNext());
     }
     public X getFirst() {
-        return head.getItem();
+        return getHead().getItem();
     }
 
     public Node<X> getHead() {
@@ -154,5 +156,9 @@ public class SingleLinkedList<X> {
 
     public void reverse() {
         reverse(null);
+    }
+
+    public boolean isEmpty() {
+        return getHead() == null;
     }
 }

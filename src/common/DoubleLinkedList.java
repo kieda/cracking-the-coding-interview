@@ -4,7 +4,7 @@ package common;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DoubleLinkedList<E> {
+public class DoubleLinkedList<E> implements SimpleQueue<E>, SimpleStack<E>{
 
     public static <Z> DoubleLinkedList<Z> make(Z... items) {
         DoubleLinkedList<Z> result = new DoubleLinkedList<>();

@@ -1,2 +1,5 @@
-package common;public class EmptyStackException {
+package common;
+
+public class EmptyStackException extends RuntimeException {
+    
 }
