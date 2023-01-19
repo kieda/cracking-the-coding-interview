@@ -1,6 +1,7 @@
 package chapter3;
 
 import common.EmptyStackException;
+import common.HasMin;
 import common.SingleLinkedList;
 import common.Sort;
 
@@ -10,9 +11,6 @@ import common.Sort;
  */
 public class StackMin {
 
-    public interface HasMin<X extends Comparable<X>>{
-        public X getMin();
-    }
     /**
      * this implementation uses an internal stack to keep track of the minimum
      */
@@ -50,20 +48,45 @@ public class StackMin {
     public static class StackMinWrapper<X extends Comparable<X>> extends SingleLinkedList<X> implements HasMin<X> {
         static class MinNode<Y extends Comparable<Y>> extends Node<Y>{
             private Y currentMin;
-            public MinNode(Y item) {
+            public MinNode(Y item, Y currentMin) {
                 super(item);
+                this.currentMin = currentMin;
             }
 
+            public Y getCurrentMin() {
+                return currentMin;
+            }
+
+            @Override
+            public MinNode<Y> getNext() {
+                return (MinNode<Y>) super.getNext();
+            }
         }
 
         @Override
+        public MinNode<X> getHead() {
+            return (MinNode<X>) super.getHead();
+        }
+
+        private X min(X val1, X val2) {
+            return Sort.compare(val1, val2) < 0 ? val1 : val2;
+
+        }
+        @Override
         public void setHead(Node<X> head) {
+            if(!(head instanceof MinNode)) {
+                X newMin = isEmpty() ? head.getItem() : min(head.getItem(), getHead().getCurrentMin());
+
+                head = new MinNode<>(head.getItem(), newMin);
+            }
             super.setHead(head);
         }
 
         @Override
         public X getMin() {
-            return null;
+            if(isEmpty())
+                throw new EmptyStackException();
+            return getHead().getCurrentMin();
         }
     }
 }

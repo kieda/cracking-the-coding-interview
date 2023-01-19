@@ -4,7 +4,7 @@ package common;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DoubleLinkedList<E> implements SimpleQueue<E>, SimpleStack<E>{
+public class DoubleLinkedList<E> implements SimpleDeque<E> {
 
     public static <Z> DoubleLinkedList<Z> make(Z... items) {
         DoubleLinkedList<Z> result = new DoubleLinkedList<>();
@@ -12,6 +12,24 @@ public class DoubleLinkedList<E> implements SimpleQueue<E>, SimpleStack<E>{
             result.addLast(items[i]);
         }
         return result;
+    }
+
+    public void delete(Node<E> node) {
+        // handles cases if the node is at the beginning, middle, end, or the only item in the list
+        Node<E> next = node.getNext();
+        Node<E> previous = node.getPrevious();
+
+        if(previous == null) {
+            setHead(next);
+        } else {
+            previous.setNext(next);
+        }
+
+        if(next == null) {
+            setTail(previous);
+        } else {
+            next.setPrevious(previous);
+        }
     }
 
     // make this publicly accessible for chapter 2
@@ -50,27 +68,43 @@ public class DoubleLinkedList<E> implements SimpleQueue<E>, SimpleStack<E>{
         }
     }
     private int length; // NOTE: length calculation may be off if we access internal nodes directly
-    private Node<E> first;
-    private Node<E> last;
+    private Node<E> head;
+    private Node<E> tail;
     public DoubleLinkedList() {
-        this.first = null;
-        this.last = null;
+        this.head = null;
+        this.tail = null;
         length = 0;
+    }
+
+    public Node<E> getHead() {
+        return head;
+    }
+
+    public Node<E> getTail() {
+        return tail;
+    }
+
+    public void setHead(Node<E> head) {
+        this.head = head;
+    }
+
+    public void setTail(Node<E> tail) {
+        this.tail = tail;
     }
 
     public void addFirst(E elem) {
         length++;
         Node<E> newNode = new Node<>(elem);
         if(isEmpty()) {
-            first = last = newNode;
-        } else if(first == last) {
-            first = newNode;
-            first.next = last;
-            last.previous = first;
+            head = tail = newNode;
+        } else if(head == tail) {
+            head = newNode;
+            head.next = tail;
+            tail.previous = head;
         } else {
-            first.previous = newNode;
-            newNode.next = first;
-            first = newNode;
+            head.previous = newNode;
+            newNode.next = head;
+            head = newNode;
         }
     }
 
@@ -78,15 +112,15 @@ public class DoubleLinkedList<E> implements SimpleQueue<E>, SimpleStack<E>{
         length++;
         Node<E> newNode = new Node<>(elem);
         if(isEmpty()) {
-            first = last = newNode;
-        } else if(first == last) {
-            last = newNode;
-            last.previous = first;
-            first.next = last;
+            head = tail = newNode;
+        } else if(head == tail) {
+            tail = newNode;
+            tail.previous = head;
+            head.next = tail;
         } else {
-            last.next = newNode;
-            newNode.previous = last;
-            last = newNode;
+            tail.next = newNode;
+            newNode.previous = tail;
+            tail = newNode;
         }
     }
     public void merge(DoubleLinkedList<E> other) {
@@ -94,41 +128,41 @@ public class DoubleLinkedList<E> implements SimpleQueue<E>, SimpleStack<E>{
         if(other.isEmpty())
             return;
         if(isEmpty()) {
-            first = other.first;
-            last = other.last;
+            head = other.head;
+            tail = other.tail;
         } else {
-            last.next = other.first;
-            last = other.last;
+            tail.next = other.head;
+            tail = other.tail;
         }
     }
     public void removeFirst() {
-        first = first.next;
-        first.previous = null;
+        head = head.next;
+        head.previous = null;
         length--;
     }
     public void removeLast() {
-        last = last.previous;
-        last.next = null;
+        tail = tail.previous;
+        tail.next = null;
         length--;
     }
 
     public boolean isEmpty() {
-        return first == null && last == null;
+        return head == null && tail == null;
     }
 
     // note: will throw nullpointerexception if no item
     public E getFirst() {
-        return first.item;
+        return head.item;
     }
     public E getLast() {
-        return last.item;
+        return tail.item;
     }
     public int getLength() {
         return length;
     }
     public List<E> toList() {
         List<E> list = new ArrayList<>(getLength());
-        Node<E> node = first;
+        Node<E> node = head;
         while(node != null) {
             list.add(node.item);
             node = node.next;
