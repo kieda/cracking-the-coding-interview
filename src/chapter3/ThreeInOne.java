@@ -6,21 +6,43 @@ import common.*;
  * Use a single array to implement three stacks
  */
 public class ThreeInOne {
-    public static class RingBufferMultiStack<X> {
+    /**
+     * This solution does NOT group consecutive items in the stack nearby in the array
+     * Instead, we keep track of the "free" elements that we can insert to
+     *
+     * This actually allows us to insert and remove from any stack in O(1) time, and there is no need for any sort
+     * of refactoring or complexity
+     */
+    public static class ArrayBackedMultiStack<X> {
         private final int totalCapacity;
         private final int numStacks;
-        // (stack, freeIndex)
-        // we use the LinkedRingBuffer to find the index of the next available stack that has free space if we shift the array
-        private Tuple2<SimpleStack<X>, LinkedRingBuffer<Integer>>[] stacks;
-        private Object[] buffer;
+
+        // keeps track of empty slots that we can fill. When a slot in the buffer opens up, we add it to
+        // this queue. When we want to allocate another item to a stack, we take it from this queue.
+        private SimpleQueue<Integer> freeSlots;
+
+        // these stacks simply keep track of the head element in the buffer, or null if the stack is empty
+        private SimpleStack<X>[] stacks;
+
+        // (data, next index for traversal)
+        private Tuple2<X, Integer>[] buffer;
         private int curentItemCount = 0;
 
-        public RingBufferMultiStack(int totalCapacity, int numStacks) {
+        public ArrayBackedMultiStack(int totalCapacity, int numStacks) {
             this.curentItemCount = 0;
             this.numStacks = numStacks;
             this.totalCapacity = totalCapacity;
-            this.buffer = new Object[totalCapacity];
-            this.stacks = new Tuple2[numStacks];
+            this.buffer = new Tuple2[totalCapacity];
+            this.stacks = new SimpleStack[numStacks];
+            this.freeSlots = new DoubleLinkedList<>();
+
+            // upon creation, all indices are free
+            for(int idx = 0; idx < totalCapacity; idx++) {
+                freeSlots.addFirst(idx);
+            }
+            for(int stackNum = 0; stackNum < numStacks; stackNum++) {
+                stacks[stackNum] = new ArrayBackedStack();
+            }
         }
 
         public boolean isEmpty() {
@@ -31,58 +53,54 @@ public class ThreeInOne {
         }
 
         public SimpleStack<X> getStack(int stackNum) {
-            return stacks[stackNum].getFirst();
+            return stacks[stackNum];
         }
 
-        private class RingBufferStack<X> implements SimpleStack<X> {
-            private int length;
-            // the index we're starting at in the buffer
-            private int startingIndex;
-            // the number of cells we currently occupy in the buffer
-            private int stackCapacity;
+        private class ArrayBackedStack implements SimpleStack<X> {
+            // represents the head of the stack, or -1 if the stack is empty
+            private int head = -1;
 
-            private X access(int index) {
-                if(index >= stackCapacity) {
-                    throw new IndexOutOfBoundsException("index " + index + " is past stackCapacity of " + stackCapacity);
-                }
-                if(index <= 0) {
-                    throw new IndexOutOfBoundsException("cannot access negative index " + index);
-                }
-                int actualIndex = (startingIndex + index) % totalCapacity;
-                return (X) stacks[actualIndex];
-            }
-
-            public RingBufferStack(int startingIndex, int stackCapacity) {
-                this.length = 0;
-                this.stackCapacity = stackCapacity;
-                this.startingIndex = startingIndex;
-            }
+            public ArrayBackedStack() {}
 
             @Override
             public void addFirst(X elem) {
-                if(RingBufferMultiStack.this.isFull())
+                if(ArrayBackedMultiStack.this.isFull())
                     throw new FullCollectionException();
+                int nextFreeSlot = freeSlots.getLast();
+                freeSlots.removeLast();
+                // entry contains the elem we want to store, as well as a pointer to the previous element in the stack (current head)
+                Tuple2<X, Integer> newEntry = Tuple2.make(elem, head);
+                buffer[nextFreeSlot] = newEntry;
+                // current head is the freeSlot we just took
+                head = nextFreeSlot;
+
                 curentItemCount++;
             }
 
             @Override
             public X getFirst() {
-                if(RingBufferStack.this.isEmpty())
+                if(ArrayBackedStack.this.isEmpty())
                     throw new EmptyCollectionException();
 
-                return access(length - 1);
+                return buffer[head].getFirst();
             }
 
             @Override
             public void removeFirst() {
-                if(RingBufferStack.this.isEmpty())
+                if(ArrayBackedStack.this.isEmpty())
                     throw new EmptyCollectionException();
+
+                Tuple2<X, Integer> headEntry = buffer[head];
+                buffer[head] = null; // remove this entry from the stack
+                freeSlots.addFirst(head); // the head index is now marked as free to use
+                head = headEntry.getSecond(); // head is moved back to previous position
+
                 curentItemCount--;
             }
 
             @Override
             public boolean isEmpty() {
-                return length == 0;
+                return head < 0;
             }
         }
     }
