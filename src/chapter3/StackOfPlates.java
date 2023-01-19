@@ -147,7 +147,7 @@ public class StackOfPlates {
                         nextStackSize--;
                         currentStackSize++;
                     }
-                    
+
                     // update sizes
                     currentPlateEntry.setSecond(currentStackSize);
                     nextPlateEntry.setSecond(nextStackSize);
