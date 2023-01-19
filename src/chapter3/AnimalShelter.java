@@ -1,7 +1,7 @@
 package chapter3;
 
 import common.DoubleLinkedList;
-import common.EmptyStackException;
+import common.EmptyCollectionException;
 import common.SimpleQueue;
 
 /**
@@ -102,7 +102,7 @@ public class AnimalShelter {
         @Override
         public Animal getLast() {
             if(isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             if(getOldestOrder(dogQueue) > getOldestOrder(catQueue)) {
                 return catQueue.getLast().getValue();
             } else {
@@ -113,7 +113,7 @@ public class AnimalShelter {
         @Override
         public void removeLast() {
             if(isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             if(getOldestOrder(dogQueue) > getOldestOrder(catQueue)) {
                 catQueue.removeLast();
             } else {

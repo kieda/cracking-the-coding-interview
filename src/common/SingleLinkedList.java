@@ -109,7 +109,7 @@ public class SingleLinkedList<X> implements SimpleStack<X>{
     }
     public void removeFirst() {
         if(getHead() == null)
-            throw new EmptyStackException();
+            throw new EmptyCollectionException();
         setHead(getHead().getNext());
     }
     public X getFirst() {

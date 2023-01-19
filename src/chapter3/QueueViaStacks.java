@@ -1,6 +1,6 @@
 package chapter3;
 
-import common.EmptyStackException;
+import common.EmptyCollectionException;
 import common.SimpleQueue;
 import common.SimpleStack;
 import common.SingleLinkedList;
@@ -31,7 +31,7 @@ public class QueueViaStacks {
 
         private void dumpIfPossible() {
             if(isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             if(stack2.isEmpty())
                 dump();
         }

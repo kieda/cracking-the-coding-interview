@@ -1,6 +1,6 @@
 package chapter3;
 
-import common.EmptyStackException;
+import common.EmptyCollectionException;
 import common.HasMin;
 import common.SingleLinkedList;
 import common.Sort;
@@ -29,14 +29,14 @@ public class StackMin {
         @Override
         public X getMin() {
             if(minStack.isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             return minStack.getFirst();
         }
 
         @Override
         public void removeFirst() {
             if(isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             if(Sort.compare(minStack.getFirst(), getFirst()) == 0) {
                 minStack.removeFirst();
             }
@@ -85,7 +85,7 @@ public class StackMin {
         @Override
         public X getMin() {
             if(isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             return getHead().getCurrentMin();
         }
     }

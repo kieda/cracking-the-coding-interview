@@ -68,7 +68,6 @@ public class StackOfPlates {
 
         private void refactorPlates() {
             // O(n) complexity. However, by amortized analysis, only occurs every O(n) calls to removeAt()
-            //
 
             // We traverse the stacks of plates by index. We only advance the index when our current stack is full
             // Otherwise we copy elements from the next stacks to fill up our current stacks, or terminate early if
@@ -160,6 +159,11 @@ public class StackOfPlates {
             }
         }
 
+        /**
+         * Removes a plate from a specified stack at index
+         * We refactor the plates to make them contiguous only after at least O(n) removals, and refactoring is an
+         * O(n) process. Therefore, removeAt is an amortized O(1) operation
+         */
         public void removeAt(int index) {
             Tuple3<SimpleDeque<X>, Integer, DoubleLinkedList.Node<Integer>> entry = plateList.get(index);
             SimpleStack<X> stack = entry.getFirst();
@@ -181,7 +185,7 @@ public class StackOfPlates {
                 if(shouldRefactor())
                     refactorPlates();
             } else {
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             }
         }
 
@@ -228,7 +232,7 @@ public class StackOfPlates {
         @Override
         public X getFirst() {
             if(isEmpty())
-                throw new EmptyStackException();
+                throw new EmptyCollectionException();
             // get the last stack that still has items in it, then return the top of the stack
             return plateList.get(nonEmptyIndices.getLast()).getFirst().getFirst();
         }
