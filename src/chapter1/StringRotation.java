@@ -1,14 +1,12 @@
 package chapter1;
 
-import common.TestException;
-import common.Testable;
-import common.Tuple2;
-import common.Tuple3;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
+import common.tuple.Tuple3;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Assume you have a method isSubstring which checks if one word is a substring of another.

@@ -1,6 +1,11 @@
 package chapter3;
 
-import common.*;
+import common.lists.DoubleLinkedList;
+import common.lists.EmptyCollectionException;
+import common.lists.SimpleDeque;
+import common.lists.SimpleStack;
+import common.tuple.Tuple2;
+import common.tuple.Tuple3;
 
 import java.util.ArrayList;
 import java.util.List;

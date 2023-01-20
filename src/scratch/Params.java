@@ -1,8 +1,8 @@
 package scratch;
 //
-//import common.InvalidArgumentException;
-//import common.InvalidArgumentSizeException;
-//import common.InvalidArgumentTypeException;
+//import common.tests.InvalidArgumentException;
+//import common.tests.InvalidArgumentSizeException;
+//import common.tests.InvalidArgumentTypeException;
 //
 //import javax.lang.model.type.ArrayType;
 //import java.io.Serializable;

@@ -1,8 +1,8 @@
 package chapter3;
 
-import common.DoubleLinkedList;
-import common.EmptyCollectionException;
-import common.SimpleQueue;
+import common.lists.DoubleLinkedList;
+import common.lists.EmptyCollectionException;
+import common.lists.SimpleQueue;
 
 /**
  * An animal shelter, which holds only dogs and cats, operates on a strictly"first in, first

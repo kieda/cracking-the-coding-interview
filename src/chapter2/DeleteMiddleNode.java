@@ -1,12 +1,15 @@
 package chapter2;
 
-import common.*;
+import common.lists.SingleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
 
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 /**
  * Implement an algorithm to delete a node in the middle (i.e. any note but the first and last node, not necessarily the exact middle)

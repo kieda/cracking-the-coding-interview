@@ -1,11 +1,12 @@
 package chapter1;
 
 import common.*;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**

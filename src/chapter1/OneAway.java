@@ -1,19 +1,16 @@
 package chapter1;
 
-import common.TestException;
-import common.Testable;
-import common.Tuple2;
-import common.Tuple3;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
+import common.tuple.Tuple3;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.IntPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 /**
  * There are three types of edits that can be formed on strings:

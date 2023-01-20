@@ -1,6 +1,6 @@
 package scratch;
 
-import common.Tuple2;
+import common.tuple.Tuple2;
 
 import java.util.Arrays;
 

@@ -1,14 +1,16 @@
 package chapter2;
 
-import common.*;
+import common.lists.SingleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
+import common.tuple.Tuple3;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 /**
  * implement an algorithm to find the kth to last element of a singly linked list

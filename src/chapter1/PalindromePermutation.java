@@ -1,9 +1,9 @@
 package chapter1;
 
-import common.DoubleLinkedList;
-import common.TestException;
-import common.Testable;
-import common.Tuple2;
+import common.lists.DoubleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
 
 import java.util.*;
 import java.util.function.Predicate;

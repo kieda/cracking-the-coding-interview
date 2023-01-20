@@ -1,9 +1,9 @@
 package chapter3;
 
-import common.EmptyCollectionException;
-import common.SimpleQueue;
-import common.SimpleStack;
-import common.SingleLinkedList;
+import common.lists.EmptyCollectionException;
+import common.lists.SimpleQueue;
+import common.lists.SimpleStack;
+import common.lists.SingleLinkedList;
 
 /**
  * Create a queue implementation from two stacks

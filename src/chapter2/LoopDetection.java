@@ -1,15 +1,16 @@
 package chapter2;
 
-import common.*;
+import common.lists.SingleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 /**
  * Given a linked list which might contain a loop, implement an algorithm that returns the node at the beginning of the loop

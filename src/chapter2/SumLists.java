@@ -1,12 +1,16 @@
 package chapter2;
 
-import common.*;
+import common.lists.SingleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
+import common.tuple.Tuple3;
 
 import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 /**
  * You have two numbers represented by a linked list, where each node contains a single digit. The digits are stored

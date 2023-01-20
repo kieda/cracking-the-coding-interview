@@ -1,9 +1,8 @@
 package driver;
 
-import chapter1.*;
 import chapter2.LinkedLists;
-import common.TestException;
-import common.Testable;
+import common.tests.TestException;
+import common.tests.Testable;
 
 import java.util.List;
 

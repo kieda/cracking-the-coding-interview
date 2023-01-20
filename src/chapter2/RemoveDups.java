@@ -2,8 +2,12 @@ package chapter2;
 
 
 import common.*;
+import common.lists.SingleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 import java.util.Arrays;
 import java.util.Random;

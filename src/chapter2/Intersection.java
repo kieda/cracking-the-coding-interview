@@ -1,12 +1,14 @@
 package chapter2;
 
-import common.*;
+import common.lists.SingleLinkedList;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 /**
  * Given two singly linked lists, determine if the two lists intersect. Return the intersecting node.

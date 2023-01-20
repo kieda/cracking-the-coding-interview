@@ -1,7 +1,7 @@
 package chapter2;
 
-import common.TestSuite;
-import common.Testable;
+import common.tests.TestSuite;
+import common.tests.Testable;
 
 import java.util.List;
 

@@ -1,13 +1,16 @@
 package chapter1;
 
 import common.*;
+import common.function.Function3;
+import common.tests.TestException;
+import common.tests.Testable;
+import common.tuple.Tuple2;
+import common.tuple.Tuple3;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.IntBinaryOperator;
 import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 /**
  * Write an algorithm such that if an element in an M x N matrix is 0, its entire row and column is set to zero

@@ -1,6 +1,6 @@
 package chapter3;
 
-import common.SingleLinkedList;
+import common.lists.SingleLinkedList;
 import common.Sort;
 
 import java.util.function.UnaryOperator;

@@ -1,6 +1,7 @@
 package chapter3;
 
-import common.*;
+import common.lists.*;
+import common.tuple.Tuple2;
 
 /**
  * Use a single array to implement three stacks

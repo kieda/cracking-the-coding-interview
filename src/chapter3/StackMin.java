@@ -1,8 +1,8 @@
 package chapter3;
 
-import common.EmptyCollectionException;
+import common.lists.EmptyCollectionException;
 import common.HasMin;
-import common.SingleLinkedList;
+import common.lists.SingleLinkedList;
 import common.Sort;
 
 /**

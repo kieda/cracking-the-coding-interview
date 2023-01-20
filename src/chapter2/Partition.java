@@ -1,11 +1,11 @@
 package chapter2;
 
-import common.SingleLinkedList;
+import common.lists.SingleLinkedList;
 import common.Sort;
 
 import java.util.function.UnaryOperator;
 
-import static common.SingleLinkedList.Node;
+import static common.lists.SingleLinkedList.Node;
 
 /**
  * Write code to partition a linked list around value x, such that all nodes less than x come before all nodes greater than
