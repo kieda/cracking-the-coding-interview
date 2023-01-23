@@ -27,6 +27,12 @@ public class Tuple0 implements Tuple{
             return false;
         return Arrays.deepEquals(this.getItems(), ((Tuple)other).getItems());
     }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(ITEMS);
+    }
+
     //Function<Object, String> a = (int[] ints) -> Arrays.toString(ints);
     private static final Map<Class, Function<Object, String>> primitiveArraysToString = Map.of(
         byte[].class, o -> Arrays.toString((byte[])o),
