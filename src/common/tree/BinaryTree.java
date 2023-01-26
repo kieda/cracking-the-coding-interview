@@ -136,6 +136,9 @@ public class BinaryTree<E> {
             parent.setLeft(thisLeft);
             parent.setRight(thisRight);
             parent.setParent(this);
+
+            if(isHead())
+                setHead(this);
         }
 
         /**
@@ -389,6 +392,10 @@ public class BinaryTree<E> {
         @Override
         public String toString() {
             return "Node<" + getElem() + ">";
+        }
+
+        public boolean isLeaf() {
+            return getLeft() == null && getRight() == null;
         }
     }
 

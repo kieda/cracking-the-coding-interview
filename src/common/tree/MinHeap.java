@@ -6,9 +6,71 @@ import common.lists.EmptyCollectionException;
 import common.tuple.Tuple2;
 
 import java.util.Collection;
+import java.util.List;
 
 public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements HasMin<X> {
     private Node nextInsertionPoint;
+
+    public class Node extends BinaryTree<X>.Node {
+        public Node(X elem) {
+            super(elem);
+        }
+
+        @Override
+        public void setElem(X elem) {
+            // if the element increases or decreases, we will want to re-heapify the element to put it in the
+            // correct spot
+            X oldElem = getElem();
+            super.setElem(elem);
+            if(Sort.compare(oldElem, elem) != 0) {
+                heapify(this);
+            }
+        }
+
+        @Override
+        public Node getLeft() {
+            return (Node)super.getLeft();
+        }
+
+        @Override
+        public Node getParent() {
+            return (Node)super.getParent();
+        }
+
+        @Override
+        public Node getRight() {
+            return (Node)super.getRight();
+        }
+    }
+
+
+    @Override
+    public Node makeNode(X elem) {
+        return new Node(elem);
+    }
+
+    @Override
+    public Node getHead() {
+        return (Node)super.getHead();
+    }
+
+    public MinHeap() {}
+    
+    /**
+     * creates a min heap in bulk. Does this in O(|items|)
+     */
+    public MinHeap(Collection<X> items) {
+        throw new UnsupportedOperationException();
+        // todo implementation
+        // 1. add all items into the heap without re-heapifying
+        // 2. starting from the last index, work backwards skipping over all leaves
+        // 3. heapify the node (downwards only)
+    }
+
+    public MinHeap(X... items) {
+        this(List.of(items));
+    }
+
 
     /**
      * returns the parent of the last node in the tree
@@ -193,8 +255,65 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
         return null;
     }
 
+    private void heapify(Node node) {
+        if(node == null)
+            return;
+
+        // 1. move node up the tree
+        if(!node.isHead()) {
+            // cannot move up the tree if it's at the head
+            Node lastParent = getLastParent();
+            Node parent = node.getParent();
+            while(parent != null && Sort.compare(parent.getElem(), node.getElem()) > 0) {
+                if(node == getLastParent()) {
+                    // if this node is the last parent, and we are going to swap up
+                    // the last parent will now be our parent
+                    setLastParent(node.getParent());
+                } else if(node.getParent() == lastParent) {
+                    // if this node's parent is the last parent and we are going to swap up
+                    // then the last parent will now be this node
+                    setLastParent(node);
+                }
+                parent = parent.getParent();
+                node.swapUp();
+            }
+        }
+
+        // 2. move node down the tree
+        if(!node.isLeaf()) {
+            Node leftChild = node.getLeft();
+            Node rightChild = node.getRight();
+
+            // cannot move down the tree if it's a leaf
+            while((leftChild != null && Sort.compare(leftChild.getElem(), node.getElem()) < 0)
+                || (rightChild != null && Sort.compare(rightChild.getElem(), node.getElem()) < 0)) {
+                // move the node down the tree if left child or right child is smaller than this node
+                Node childToSwap;
+                if(leftChild == null)
+                    childToSwap = rightChild;
+                else if(node.getRight() == null)
+                    childToSwap = leftChild;
+                else
+                    // get lesser of two children
+                    childToSwap = Sort.compare(leftChild.getElem(), rightChild.getElem()) <= 0 ? leftChild : rightChild;
+
+                if(childToSwap == getLastParent())
+                    // node will be swapped down with childToSwap, new last parent is this node
+                    setLastParent(node);
+                else if(node == getLastParent())
+                    // node will be swapped down with childToSwap, new last parent will be the swapped child
+                    setLastParent(childToSwap);
+
+                childToSwap.swapUp();
+
+                leftChild = node.getLeft();
+                rightChild = node.getRight();
+            }
+        }
+    }
+
     public Node insert(X elem) {
-        Node insertionNode = new Node(elem);
+        Node insertionNode = makeNode(elem);
         Node insertionPoint = getLastParent();
         if(insertionPoint == null) {
             setHead(insertionNode);
@@ -209,20 +328,11 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
                 // exception - insertionPoint should always have an available node
                 throw new HeapInvariantException("Insertion point " + insertionPoint + " does not have an available child");
             }
-            boolean swapNodes = false;
-            Node parent = insertionPoint;
-            // if our child is greater than our parent, we swap it up
-            while(parent != null && Sort.compare(parent.getElem(), insertionNode.getElem()) < 0) {
-                swapNodes = true; // signifies that the next insertion point is not our current one, rather the parent that was swapped down
-                parent = parent.getParent();
-                insertionNode.swapUp(); // node is moved upwards by this method
-            }
-            if(parent == null) {
-                // we swapped the node all the way up to the top
-                setHead(insertionNode);
-            }
-            // get the next insertion point
-            setLastParent(findNextInsertionPoint(swapNodes ? insertionPoint : insertionNode));
+
+            // heapify the node we inserted
+            heapify(insertionNode);
+            // move the last parent to the next position
+            setLastParent(findNextInsertionPoint(getLastParent()));
         }
         return insertionNode;
     }
@@ -288,16 +398,29 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
         removeNode.setLeft(null);
         removeNode.setRight(null);
 
-        // now, we heapify to put nodeToSwap in the right position. Note that we may need to either heapify up or heapify down
-        // todo: we want to ensure that the next insertion point is set to the correct value if it's swapped
-        //       we can refactor out into a single method - heapify(node)
-        //       which will first try and place the item with the parent
-        //       then will check the children and swap down
+        // now, we heapify to put nodeToSwap in the right position
+        heapify(nodeToSwap);
     }
 
+    /**
+     * merges two heaps in O(log(M)log(N)) where M is this heap size, N is the other heap's size
+     *
+     * Unfortunately the algorithm is behind a paywall :(
+     *
+     * todo - get access to article for implementation
+     * https://link.springer.com/article/10.1007/BF00264229
+     */
+    public Collection<Node> addAll(MinHeap<X> items) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * adds all items to this heap in O(N + log(M)log(N)) where M is this heap size, N is the other heap's size
+     *
+     * Constructs a new heap and calls merge
+     */
     public Collection<Node> addAll(Collection<X> items) {
-        // we can add many items in O(|items|) by adding them to the array, then heapifying up from the bottom nodes
-        return null;
+        return addAll(new MinHeap<X>(items));
     }
 
     /**
@@ -307,6 +430,25 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
      * @return (X itemExtracted, Node newNodeInserted)
      */
     public Tuple2<X, Node> insertThenExtractMin(X elem) {
-        return null;
+        Node newNode = makeNode(elem);
+        if(isEmpty() || Sort.compare(elem, getMin()) < 0) {
+            return Tuple2.make(elem, newNode);
+        }
+        X result = getMin();
+
+        // set newNode as the head
+        Node head = getHead();
+        newNode.setLeft(head.getLeft());
+        newNode.setRight(head.getRight());
+        setHead(newNode);
+
+        // remove head from this tree
+        head.setRight(null);
+        head.setLeft(null);
+
+        // heapify the new node
+        heapify(newNode);
+
+        return Tuple2.make(result, newNode);
     }
 }
