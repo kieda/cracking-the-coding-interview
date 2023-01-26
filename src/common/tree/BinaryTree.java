@@ -15,6 +15,10 @@ import java.util.function.BiFunction;
 public class BinaryTree<E> {
     private Node head;
 
+    protected static <X> void  throwMissingChild(BinaryTree<X>.Node parent, BinaryTree<X>.Node child) {
+        throw new MissingChildException("child", parent, child);
+    }
+
     enum ParentalRelation{
         HEAD,
         LEFT,
@@ -33,7 +37,7 @@ public class BinaryTree<E> {
                     parent.setRight(replacement);
                     break;
                 case NONE:
-                    throw new IllegalStateException("Parent " + parent + " does not have child " + node);
+                    throwMissingChild(parent, node);
             }
         }
 
@@ -99,10 +103,6 @@ public class BinaryTree<E> {
             return getParent() == null;
         }
 
-
-        private void throwMissingChild(Node parent, Node child) {
-            throw new IllegalStateException("Parent " + parent + " does not have child " + child);
-        }
         /**
          * Swaps positions in the tree by swapping the nodes
          */
