@@ -5,6 +5,7 @@ import common.Sort;
 import common.lists.EmptyCollectionException;
 import common.tuple.Tuple2;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -55,20 +56,72 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
     }
 
     public MinHeap() {}
-    
+
     /**
      * creates a min heap in bulk. Does this in O(|items|)
      */
-    public MinHeap(Collection<X> items) {
-        throw new UnsupportedOperationException();
-        // todo implementation
+    public static <X extends Comparable<X>> Tuple2<MinHeap<X>, Collection<MinHeap<X>.Node>> makeMinHeap(Collection<X> items) {
+        return makeMinHeap((X[])items.toArray());
+    }
+
+    public static <X extends Comparable<X>> Tuple2<MinHeap<X>, Collection<MinHeap<X>.Node>> makeMinHeap(X... items) {
+        MinHeap<X> result = new MinHeap<>();
+        List<MinHeap<X>.Node> nodes = new ArrayList<>(items.length);
+        if(items.length == 0)
+            return Tuple2.make(result, nodes);
+
         // 1. add all items into the heap without re-heapifying
         // 2. starting from the last index, work backwards skipping over all leaves
         // 3. heapify the node (downwards only)
-    }
+        for(X item : items) {
+            nodes.add(result.new Node(item));
+        }
+        for(MinHeap<X>.Node node : nodes) {
+            MinHeap<X>.Node insertionPoint = result.getLastParent();
+            if(insertionPoint == null) {
+                result.setHead(node);
+                result.setLastParent(node);
+            } else {
+                if (insertionPoint.getLeft() == null) {
+                    // insert it to the left
+                    insertionPoint.setLeft(node);
+                } else if (insertionPoint.getRight() == null) {
+                    insertionPoint.setRight(node);
+                } else {
+                    // exception - insertionPoint should always have an available node
+                    throw new HeapInvariantException("Insertion point " + insertionPoint + " does not have an available child");
+                }
+                result.setLastParent(result.findNextInsertionPoint(result.getLastParent()));
+            }
+        }
+        // 01111
+        // 00111
+        // 00000
 
-    public MinHeap(X... items) {
-        this(List.of(items));
+        // 10000
+        // 11111 - 10000 = 01111 = 15 to become complete
+        //  1111 nodes depth 2 or above
+        //  1111 - (15 >> 1) = 1001 number of nodes
+
+        // 1111 - 1110 = 1 = 1 nodes to complete
+        //  111 - 0 = 7
+        // has the form 100000
+        int numBottomLeaves = Integer.highestOneBit(items.length);
+        // has the form 111111 representing a complete tree
+        int fullTree = ((numBottomLeaves - 1) | numBottomLeaves);
+        // number of leaves required to complete the bottom row
+        int numLeavesToComplete = fullTree - items.length;
+        // left expression is a complete tree with depth - 1 which will be our non-leaf nodes.
+        // we subtract the nodes that are leaves because they don't have a child in the lowest parent
+        int numNonLeaves = (fullTree>>>1) - (numLeavesToComplete>>>1);
+
+        for(int i = numNonLeaves - 1; i >= 0; i--) {
+            MinHeap<X>.Node node = nodes.get(i);
+            // push this node down according to heapify
+            result.heapifyDown(node);
+        }
+
+        return Tuple2.make(result, nodes);
     }
 
 
@@ -255,10 +308,8 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
         return null;
     }
 
-    private void heapify(Node node) {
-        if(node == null)
-            return;
 
+    private void heapifyUp(Node node) {
         // 1. move node up the tree
         if(!node.isHead()) {
             // cannot move up the tree if it's at the head
@@ -278,7 +329,8 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
                 node.swapUp();
             }
         }
-
+    }
+    private void heapifyDown(Node node) {
         // 2. move node down the tree
         if(!node.isLeaf()) {
             Node leftChild = node.getLeft();
@@ -286,7 +338,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
 
             // cannot move down the tree if it's a leaf
             while((leftChild != null && Sort.compare(leftChild.getElem(), node.getElem()) < 0)
-                || (rightChild != null && Sort.compare(rightChild.getElem(), node.getElem()) < 0)) {
+                    || (rightChild != null && Sort.compare(rightChild.getElem(), node.getElem()) < 0)) {
                 // move the node down the tree if left child or right child is smaller than this node
                 Node childToSwap;
                 if(leftChild == null)
@@ -310,6 +362,12 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
                 rightChild = node.getRight();
             }
         }
+    }
+    private void heapify(Node node) {
+        if(node == null)
+            return;
+        heapifyUp(node);
+        heapifyDown(node);
     }
 
     public Node insert(X elem) {
@@ -420,7 +478,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
      * Constructs a new heap and calls merge
      */
     public Collection<Node> addAll(Collection<X> items) {
-        return addAll(new MinHeap<X>(items));
+        return addAll(makeMinHeap(items).getFirst());
     }
 
     /**
