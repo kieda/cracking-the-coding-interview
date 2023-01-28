@@ -467,10 +467,45 @@ public class BinaryTree<E> {
 
     /**
      * Utilize morris traversal, in-order.
-     * If we ever reach a node where the predicate "stop" returns true, we immediately exit the traversal and return
-     * the result (e.g. searching).
+     * If we ever reach a node where the predicate "stop" returns true, we stop the accumulator
+     * and will return the result. Note that stop here does not immediately exit the traversal, since we may have
+     * nodes that need to be restored to their previous configuration
      */
     public <A> A traverse(A initial, BiFunction<A, Node, A> accumulator, BiPredicate<A, E> stop) {
-        return null;
+        boolean stopVisiting = false;
+        Node current = getHead();
+        while(current != null) {
+            if(current.getLeft() == null) {
+                if(!stopVisiting) {
+                    // visit current node
+                    initial = accumulator.apply(initial, current);
+                    // test for stopping condition
+                    stopVisiting = stop.test(initial, current.getElem());
+                }
+                current = current.getRight();
+            } else {
+                // make current the the right child of the rightmost node in current's left subtree
+                Node previous = current.getLeft();
+                while(previous.getRight() != null && previous.getRight() != current) {
+                    previous = previous.getRight();
+                }
+
+                if(previous.getRight() == null) {
+                    previous.setRight(current);
+                    current = current.getLeft();
+                } else {
+                    previous.setRight(null);
+
+                    // visit the current node
+                    if(!stopVisiting) {
+                        initial = accumulator.apply(initial, current);
+                        stopVisiting = stop.test(initial, current.getElem());
+                    }
+
+                    current = current.getRight();
+                }
+            }
+        }
+        return initial;
     }
 }
