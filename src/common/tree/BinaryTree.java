@@ -6,6 +6,7 @@ import common.function.Function4;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 /**
  * a basic binary tree without restrictions. Has some useful functions for rearranging the BT.
@@ -250,6 +251,47 @@ public class BinaryTree<E> {
             setParent(left); // our new parent is our left node
         }
 
+        /**
+         * performs a rotation on the node X that has the form
+         *        Z
+         *       /
+         *      X
+         *       \
+         *        Y
+         * will have the final form
+         *        Y
+         *      /  \
+         *     X    Z
+         */
+        public void leftRightRotate() {
+            if(ParentalRelation.getRelation(this) != ParentalRelation.LEFT) {
+                throw new CannotRotateException("left right rotation needs to be situated to left of parent", this);
+            }
+            Node parent = getParent();
+            leftRotate();
+            parent.rightRotate();
+        }
+
+        /**
+         * performs a rotation on the node X that has the form
+         *        Z
+         *         \
+         *          X
+         *         /
+         *        Y
+         * will have the final form
+         *        Y
+         *      /  \
+         *     Z    X
+         */
+        public void rightLeftRotate() {
+            if(ParentalRelation.getRelation(this) != ParentalRelation.RIGHT) {
+                throw new CannotRotateException("right left rotation needs to be situated to right of parent", this);
+            }
+            Node parent = getParent();
+            rightRotate();
+            parent.leftRotate();
+        }
 
         /**
          * Simple, stupid version of removal. We provide a function to place the left and right branches, which is called
@@ -413,5 +455,22 @@ public class BinaryTree<E> {
 
     public boolean isEmpty() {
         return head == null;
+    }
+
+
+    /**
+     * traverses through the entire tree, without stopping
+     */
+    public <A> A traverse(A initial, BiFunction<A, Node, A> accumulator) {
+        return traverse(initial, accumulator, (a, elem) -> false);
+    }
+
+    /**
+     * Utilize morris traversal, in-order.
+     * If we ever reach a node where the predicate "stop" returns true, we immediately exit the traversal and return
+     * the result (e.g. searching).
+     */
+    public <A> A traverse(A initial, BiFunction<A, Node, A> accumulator, BiPredicate<A, E> stop) {
+        return null;
     }
 }

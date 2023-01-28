@@ -8,6 +8,8 @@ import common.tuple.Tuple2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements HasMin<X> {
     private Node nextInsertionPoint;
@@ -223,18 +225,22 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
         return lastParent;
     }
 
+    public Node findFirst(X elem) {
+        return traverse(null, (found, node) -> (Node)node, (accum, node) -> Sort.compare(node, elem) == 0);
+    }
+
     /**
-     * O(n) search through the binary tree. We visit each node exactly twice, one entering the subtree and another leaving it
+     * O(n) traverse through the binary tree. We visit each node exactly twice, one entering the subtree and another leaving it
      *
      * We use the balanced property of the tree to allow us to traverse the tree without a stack or recursion
      * This is done by traversing via a node order by incrementing an integer representing our index
      *
      * With a little XOR magic and since we know this is a complete binary tree we can find out a traversal pattern
-     * without using space.
+     * using O(1) space and without modifying the tree structure (unlike the morris traversal).
      */
-    public Node findFirst(X elem) {
+    public <A> A traverse(A initial, BiFunction<A, BinaryTree<X>.Node, A> accumulator, BiPredicate<A, X> stop) {
         if(isEmpty())
-            return null;
+            return initial;
 
         // perform an in-order traversal. Start from leftmost node
         Node startNode = getHead();
@@ -249,11 +255,14 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
         int depth = 0; // we set depth at the bottom to 0, at the head is maxDepth
         boolean skipBottom = false; // set this to true if we want to start skipping the bottom entries for a non-full tree
         while(node != null) {
+            // visit this node: fold into the next item
+            initial = accumulator.apply(initial, node);
 
-            // we found the node! return it.
-            if(Sort.compare(node.getElem(), elem) == 0)
-                return node;
+            // stop condition (e.g. for searches)
+            if(stop.test(initial, node.getElem()))
+                return initial;
 
+            // otherwise, visit the next node
             if(!skipBottom && depth > 0 && node.getLeft() == null || node.getRight() == null) {
                 // every other node is now gone because the tree isn't completely full.
                 shift = 1; // shift essentially cuts off the bottom nodes of the tree we're traversing through - useful when we have an incomplete trees
@@ -305,9 +314,8 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
             index += modifier;
         }
 
-        return null;
+        return initial;
     }
-
 
     private void heapifyUp(Node node) {
         // 1. move node up the tree
