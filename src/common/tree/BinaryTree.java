@@ -1,10 +1,9 @@
 package common.tree;
 
-import common.function.Consumer3;
 import common.function.Function3;
-import common.function.Function4;
+import common.tuple.Tuple2;
 
-import java.util.function.BiConsumer;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
@@ -13,6 +12,8 @@ import java.util.function.BiPredicate;
  * Implementing classes may impose things like balancing or order
  * @param <E>
  */
+// todo - perhaps make Node type an argument of the BinaryTree itself, then overriding classes can use their own Node implementations
+//        this would remove the need to have overrides just to change or check the type of the node (in a traversal, lookup, etc)
 public class BinaryTree<E> {
     private Node head;
 
@@ -20,7 +21,52 @@ public class BinaryTree<E> {
         throw new MissingChildException("child", parent, child);
     }
 
-    enum ParentalRelation{
+    /**
+     * defines the relationship between this node's parent and its grandparent.
+     * "ZIG" means that the child is to the left, and "ZAG" means the child is to the right
+     * If there is no parent, the relationship is HEAD
+     * If there is a problem (e.g. parent doesn't have this node as a child), then NONE is returned
+     */
+    enum GrandparentRelation{
+        ZIG(ParentRelation.LEFT, ParentRelation.HEAD),
+        ZAG(ParentRelation.RIGHT, ParentRelation.HEAD),
+        ZIGZAG(ParentRelation.LEFT, ParentRelation.RIGHT),
+        ZAGZIG(ParentRelation.RIGHT, ParentRelation.LEFT),
+        ZIGZIG(ParentRelation.LEFT, ParentRelation.LEFT),
+        ZAGZAG(ParentRelation.RIGHT, ParentRelation.RIGHT),
+        HEAD(ParentRelation.HEAD, ParentRelation.NONE), // if this node is the head
+        NONE(ParentRelation.NONE, ParentRelation.NONE); // if there is a problem in our relationship
+
+        private final static Map<Tuple2<ParentRelation, ParentRelation>, BinaryTree.GrandparentRelation> lookupMap;
+        static {
+            // populate map from mask -> SearchFlags for fast lookup
+            BinaryTree.GrandparentRelation[] values = values();
+            Map.Entry<Tuple2<ParentRelation, ParentRelation>, BinaryTree.GrandparentRelation>[] enumEntries = new Map.Entry[values.length];
+            for(int i = 0; i < values.length; i++) {
+                enumEntries[i] = Map.entry(Tuple2.make(values[i].parent, values[i].grandparent), values[i]);
+            }
+            lookupMap = Map.ofEntries(enumEntries);
+        }
+
+        private final ParentRelation parent;
+        private final ParentRelation grandparent;
+        GrandparentRelation(ParentRelation parent, ParentRelation grandparent) {
+            this.parent = parent;
+            this.grandparent = grandparent;
+        }
+
+        public static <E> GrandparentRelation getRelation(BinaryTree<E>.Node node) {
+            ParentRelation parentRelation = ParentRelation.getRelation(node);
+            if(parentRelation == ParentRelation.HEAD)
+                return HEAD;
+            if(parentRelation == ParentRelation.NONE)
+                return NONE;
+            ParentRelation grandparentRelation = ParentRelation.getRelation(node.getParent());
+            return lookupMap.getOrDefault(Tuple2.make(parentRelation, grandparentRelation), GrandparentRelation.NONE);
+        }
+    }
+
+    enum ParentRelation {
         HEAD,
         LEFT,
         RIGHT,
@@ -42,7 +88,7 @@ public class BinaryTree<E> {
             }
         }
 
-        public static <E> ParentalRelation getRelation(BinaryTree<E>.Node node) {
+        public static <E> ParentRelation getRelation(BinaryTree<E>.Node node) {
             BinaryTree<E>.Node parent = node.getParent();
             if(parent == null) {
                 return HEAD;
@@ -121,7 +167,7 @@ public class BinaryTree<E> {
             Node thisRight = getRight();
 
             // replaces our parent with this node in the tree
-            ParentalRelation.getRelation(parent)
+            ParentRelation.getRelation(parent)
                 .replaceNode(parent, this);
 
             setParent(grandParent);
@@ -175,11 +221,11 @@ public class BinaryTree<E> {
                 throw new CannotRotateException("Cannot rotate to the left, as right child is null!", this);
             }
             Node grandChildLeft = right.getLeft();
-            ParentalRelation relation = ParentalRelation.getRelation(this);
+            ParentRelation relation = ParentRelation.getRelation(this);
             // sets the parent's child to our left node
             relation.replaceNode(this, right);
 
-            if(relation == ParentalRelation.HEAD) {
+            if(relation == ParentRelation.HEAD) {
                 // set new head to the right, which is our new parent
                 setHead(right);
             }
@@ -231,10 +277,10 @@ public class BinaryTree<E> {
             }
             Node grandChildRight = left.getRight();
             // sets the parent's child to our left node
-            ParentalRelation relation = ParentalRelation.getRelation(this);
+            ParentRelation relation = ParentRelation.getRelation(this);
             relation.replaceNode(this, left);
 
-            if(relation == ParentalRelation.HEAD) {
+            if(relation == ParentRelation.HEAD) {
                 // set head to the left node, which is our new parent
                 setHead(left);
             }
@@ -264,11 +310,28 @@ public class BinaryTree<E> {
          *     X    Z
          */
         public void leftRightRotate() {
-            if(ParentalRelation.getRelation(this) != ParentalRelation.LEFT) {
+            if(ParentRelation.getRelation(this) != ParentRelation.LEFT) {
                 throw new CannotRotateException("left right rotation needs to be situated to left of parent", this);
             }
             Node parent = getParent();
             leftRotate();
+            parent.rightRotate();
+        }
+
+        public void leftLeftRotate() {
+            if(ParentRelation.getRelation(this) != ParentRelation.LEFT) {
+                throw new CannotRotateException("left left rotation needs to be situated to left of parent", this);
+            }
+            Node parent = getParent();
+            leftRotate();
+            parent.leftRotate();
+        }
+        public void rightRightRotate() {
+            if(ParentRelation.getRelation(this) != ParentRelation.RIGHT) {
+                throw new CannotRotateException("right right rotation needs to be situated to right of parent", this);
+            }
+            Node parent = getParent();
+            rightRotate();
             parent.rightRotate();
         }
 
@@ -285,7 +348,7 @@ public class BinaryTree<E> {
          *     Z    X
          */
         public void rightLeftRotate() {
-            if(ParentalRelation.getRelation(this) != ParentalRelation.RIGHT) {
+            if(ParentRelation.getRelation(this) != ParentRelation.RIGHT) {
                 throw new CannotRotateException("right left rotation needs to be situated to right of parent", this);
             }
             Node parent = getParent();
@@ -310,7 +373,7 @@ public class BinaryTree<E> {
             Node left = getLeft();
             Node right = getRight();
             // cull this node from the tree
-            ParentalRelation.getRelation(this).replaceNode(this, null);
+            ParentRelation.getRelation(this).replaceNode(this, null);
 
             // left and right nodes are free-floating
             setLeft(null);
@@ -353,8 +416,8 @@ public class BinaryTree<E> {
 
             if(getLeft() == null && getRight() == null) {
                 // easy case: this is a leaf node.
-                ParentalRelation relation = ParentalRelation.getRelation(this);
-                if(relation == ParentalRelation.HEAD) {
+                ParentRelation relation = ParentRelation.getRelation(this);
+                if(relation == ParentRelation.HEAD) {
                     // this is a tree with one node. Delete it.
                     setHead(null);
                     setHead(onDeletion.apply(this, null));
@@ -368,7 +431,7 @@ public class BinaryTree<E> {
                 // easy case: left or right node on this node is null
                 Node replacementNode = getLeft() == null ? getRight() : getLeft();
                 Node parent = getParent();
-                switch(ParentalRelation.getRelation(this)) {
+                switch(ParentRelation.getRelation(this)) {
                     case HEAD:
                         // replace head with available tree
                         setHead(replacementNode);
@@ -412,7 +475,7 @@ public class BinaryTree<E> {
                 Node left = getLeft();
                 Node right = getRight();
                 // cull this node from the tree
-                ParentalRelation.getRelation(this).replaceNode(this, null);
+                ParentRelation.getRelation(this).replaceNode(this, null);
 
                 // left and right nodes are free-floating
                 setLeft(null);
@@ -472,6 +535,7 @@ public class BinaryTree<E> {
      * nodes that need to be restored to their previous configuration
      */
     public <A> A traverse(A initial, BiFunction<A, Node, A> accumulator, BiPredicate<A, E> stop) {
+        int edgesAdded = 0;
         boolean stopVisiting = false;
         Node current = getHead();
         while(current != null) {
@@ -481,6 +545,10 @@ public class BinaryTree<E> {
                     initial = accumulator.apply(initial, current);
                     // test for stopping condition
                     stopVisiting = stop.test(initial, current.getElem());
+
+                    // stop condition: we reset all our edges and we've reached a stopping point
+                    if(edgesAdded == 0 && stopVisiting)
+                        return initial;
                 }
                 current = current.getRight();
             } else {
@@ -491,10 +559,16 @@ public class BinaryTree<E> {
                 }
 
                 if(previous.getRight() == null) {
+                    edgesAdded++;
                     previous.setRight(current);
                     current = current.getLeft();
                 } else {
+                    edgesAdded--;
                     previous.setRight(null);
+
+                    // stop condition: we reset all our edges and we've reached a stopping point
+                    if(edgesAdded == 0 && stopVisiting)
+                        return initial;
 
                     // visit the current node
                     if(!stopVisiting) {

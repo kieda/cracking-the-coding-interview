@@ -62,7 +62,10 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
         GREATER_THAN(1<<1),
         LESS_THAN(1<<2),
         GREATER_OR_EQUAL((1<<1) | 1),
-        LESS_OR_EQUAL((1<<2) | 1);
+        LESS_OR_EQUAL((1<<2) | 1),
+        // this will traverse the binary search tree down till we find the Node that we can insert the given element
+        // and preserve the BST invariant. Node will have left or right free for insertion.
+        INSERTION_POINT( (1<<2) | (1<<1));
         private final int mask;
         private final static Map<Integer, SearchFlags> lookupMap;
         static {

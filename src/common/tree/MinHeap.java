@@ -161,7 +161,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
                 // traverse down to get the next available node
                 current = current.getLeft();
             } else {
-                switch (ParentalRelation.getRelation(current)) {
+                switch (ParentRelation.getRelation(current)) {
                     case LEFT:
                         // we are switching to a right branch which has open positions
                         current = current.getParent().getRight();
@@ -196,7 +196,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
         // otherwise, both our left and right is null
         // traverse up the tree to a point where we can traverse down a left node without going down the same path again
         loop : while(lastParent.getParent() != null) {
-            switch(ParentalRelation.getRelation(lastParent)) {
+            switch(ParentRelation.getRelation(lastParent)) {
                 case RIGHT:
                     lastParent = lastParent.getParent();
                 case HEAD:
@@ -449,9 +449,9 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
 
         // sets the parent's left or right children to a new value. NodeToSwap's parent releases its pointer.
         // RemoveNode's parent updates its pointer to the node we want to swap in.
-        ParentalRelation.getRelation(removeNode)
+        ParentRelation.getRelation(removeNode)
                 .replaceNode(removeNode, nodeToSwap);
-        ParentalRelation.getRelation(nodeToSwap)
+        ParentRelation.getRelation(nodeToSwap)
                 .replaceNode(nodeToSwap, null);
 
         // nodeToSwap is now positioned where removeNode was
