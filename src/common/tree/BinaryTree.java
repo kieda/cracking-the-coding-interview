@@ -318,23 +318,6 @@ public class BinaryTree<E> {
             parent.rightRotate();
         }
 
-        public void leftLeftRotate() {
-            if(ParentRelation.getRelation(this) != ParentRelation.LEFT) {
-                throw new CannotRotateException("left left rotation needs to be situated to left of parent", this);
-            }
-            Node parent = getParent();
-            leftRotate();
-            parent.leftRotate();
-        }
-        public void rightRightRotate() {
-            if(ParentRelation.getRelation(this) != ParentRelation.RIGHT) {
-                throw new CannotRotateException("right right rotation needs to be situated to right of parent", this);
-            }
-            Node parent = getParent();
-            rightRotate();
-            parent.rightRotate();
-        }
-
         /**
          * performs a rotation on the node X that has the form
          *        Z
@@ -501,6 +484,10 @@ public class BinaryTree<E> {
 
         public boolean isLeaf() {
             return getLeft() == null && getRight() == null;
+        }
+
+        public boolean isFull() {
+            return getLeft() != null && getRight() != null;
         }
     }
 
