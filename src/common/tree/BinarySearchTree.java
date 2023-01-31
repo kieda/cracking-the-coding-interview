@@ -51,6 +51,77 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
         public BinarySearchTree<X>.Node getParent() {
             return (BinarySearchTree<X>.Node)super.getParent();
         }
+
+        /**
+         * looks up a value in subtrees of this node, including this node
+         */
+        public Node lookup(X data) {
+            return lookup(data, SearchFlags.EQUAL_TO);
+        }
+
+        /**
+         * looks up a value in subtrees and this node, according to SearchFlags
+         */
+        public Node lookup(X data, SearchFlags flags) {
+            Consumer<Node> doNothing = n -> {};
+            return lookup(data, doNothing, doNothing, flags);
+        }
+
+        /**
+         * looks up a value in subtrees and this node, according to SearchFlags and with functions to visit the nodes
+         * when traversing down and back up
+         */
+        public Node lookup(X data, Consumer<Node> visitDown, Consumer<Node> visitUp, SearchFlags flags) {
+            Node traverser = this;
+
+            // find the best node according to the search flags
+            Node foundNode = null;
+            while(traverser != null) {
+                int comparison = Sort.compare(data, traverser.getElem());
+                if(comparison == 0 && flags.equalTo()) {
+                    // we found the exact node
+                    foundNode = traverser;
+                    break;
+                } else if(comparison > 0) {
+                    if(flags.lessThan())
+                        foundNode = traverser;
+                    traverser = traverser.getRight();
+                } else {
+                    if(flags.greaterThan())
+                        foundNode = traverser;
+                    traverser = traverser.getLeft();
+                }
+            }
+
+            if(foundNode == null)
+                return null;
+
+            // now, we traverse down the tree, visiting each node, then go back up again
+            traverser = this;
+            while(traverser != null) {
+                // traverse down to we get to our foundNode
+                visitDown.accept(traverser);
+                int comparison = Sort.compare(foundNode.getElem(), traverser.getElem());
+                if(traverser == foundNode) {
+                    // traverse back up again
+                    Node traverseUp = traverser;
+                    while(traverseUp != null) {
+                        visitUp.accept(traverseUp);
+                        traverseUp = traverseUp.getParent();
+                    }
+                    return traverser;
+                } else if(comparison > 0) {
+                    traverser = traverser.getRight();
+                } else {
+                    // if we have an implementation that allows duplicates, duplicates will be put to the left
+                    // thus we traverse left if comparison == 0 but it isn't the node we found
+                    traverser = traverser.getLeft();
+                }
+            }
+
+            // should never occur unless we break order invariants while traversing down
+            throw new MissingChildException("descendant", this, foundNode);
+        }
     }
 
     /**
@@ -101,14 +172,6 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
         }
     }
 
-    public Node lookup(X data) {
-        return lookup(data, SearchFlags.EQUAL_TO);
-    }
-    public Node lookup(X data, SearchFlags flags) {
-        Consumer<Node> doNothing = n -> {};
-        return lookup(data, doNothing, doNothing, flags);
-    }
-
     @Override
     public void setHead(BinaryTree<X>.Node head) {
         if(!(head instanceof BinarySearchTree.Node)) {
@@ -120,6 +183,15 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
     @Override
     public BinarySearchTree<X>.Node getHead() {
         return (BinarySearchTree<X>.Node)super.getHead();
+    }
+
+    public Node lookup(X data) {
+        final Node head = getHead();
+        return head == null ? null : head.lookup(data);
+    }
+    public Node lookup(X data, SearchFlags flags) {
+        final Node head = getHead();
+        return head == null ? null : head.lookup(data, flags);
     }
 
     /**
@@ -137,55 +209,7 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
      */
     public Node lookup(X data, Consumer<Node> visitDown, Consumer<Node> visitUp, SearchFlags flags) {
         final Node head = getHead();
-        Node traverser = head;
-
-        // find the best node according to the search flags
-        Node foundNode = null;
-        while(traverser != null) {
-            int comparison = Sort.compare(data, traverser.getElem());
-            if(comparison == 0 && flags.equalTo()) {
-                // we found the exact node
-                foundNode = traverser;
-                break;
-            } else if(comparison > 0) {
-                if(flags.lessThan())
-                    foundNode = traverser;
-                traverser = traverser.getRight();
-            } else {
-                if(flags.greaterThan())
-                    foundNode = traverser;
-                traverser = traverser.getLeft();
-            }
-        }
-
-        if(foundNode == null)
-            return null;
-
-        // now, we traverse down the tree, visiting each node, then go back up again
-        traverser = head;
-        while(traverser != null) {
-            // traverse down to we get to our foundNode
-            visitDown.accept(traverser);
-            int comparison = Sort.compare(foundNode.getElem(), traverser.getElem());
-            if(traverser == foundNode) {
-                // traverse back up again
-                Node traverseUp = traverser;
-                while(traverseUp != null) {
-                    visitUp.accept(traverseUp);
-                    traverseUp = traverseUp.getParent();
-                }
-                return traverser;
-            } else if(comparison > 0) {
-                traverser = traverser.getRight();
-            } else {
-                // if we have an implementation that allows duplicates, duplicates will be put to the left
-                // thus we traverse left if comparison == 0 but it isn't the node we found
-                traverser = traverser.getLeft();
-            }
-        }
-
-        // should never occur unless we break order invariants while traversing down
-        throw new MissingChildException("descendant", head, foundNode);
+        return head == null ? null : head.lookup(data, visitDown, visitUp, flags);
     }
 
     @Override
