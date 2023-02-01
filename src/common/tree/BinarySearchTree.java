@@ -74,13 +74,20 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
         public Node lookup(X data, Consumer<Node> visitDown, Consumer<Node> visitUp, SearchFlags flags) {
             Node traverser = this;
 
-            // find the best node according to the search flags
+            // find the best node according to the search flags.
+            // We attempt to find the node that's furthest down the tree in the case of duplicates
+
+            boolean foundExact = false;
             Node foundNode = null;
             while(traverser != null) {
                 int comparison = Sort.compare(data, traverser.getElem());
                 if(comparison == 0 && flags.equalTo()) {
                     // we found the exact node
                     foundNode = traverser;
+                    foundExact = true;
+                } else if(foundExact && comparison != 0){
+                    // we already found an exact match but we don't have a duplicate element.
+                    // exit early
                     break;
                 } else if(comparison > 0) {
                     if(flags.lessThan())
