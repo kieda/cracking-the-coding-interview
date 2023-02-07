@@ -100,6 +100,20 @@ public class BinaryTree<E> {
                 return NONE;
             }
         }
+
+        public <E> BinaryTree<E>.Node getOppositeSibling(BinaryTree<E>.Node node) {
+            BinaryTree<E>.Node parent = node.getParent();
+            switch(this) {
+                case LEFT:
+                    return parent.getRight();
+                case RIGHT:
+                    return parent.getLeft();
+                default:
+                    throwMissingChild(parent, node);
+            }
+            // will never occur from throw statement above, but java compiler will complain otherwise.
+            return null;
+        }
     }
 
     public class Node {

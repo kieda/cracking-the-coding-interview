@@ -364,8 +364,18 @@ public class AVLTree<E extends Comparable<E>> extends BinarySearchTree<E> {
         return (Node)super.lookup(data, flags);
     }
 
+    @Override
+    public Node makeNode(E elem) {
+        return new Node(elem);
+    }
+
+    @Override
+    public Node getHead() {
+        return (Node)super.getHead();
+    }
+
     public Node insert(E elem) {
-        Node newNode = new Node(elem);
+        Node newNode = makeNode(elem);
         if(isEmpty()) {
             setHead(newNode);
             return newNode;
