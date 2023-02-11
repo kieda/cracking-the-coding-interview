@@ -52,6 +52,20 @@ public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
             return (BinarySearchTree<X>.Node)super.getParent();
         }
 
+        public Node getInorderSuccessorRandom() {
+            return getInorderSuccessor(Math.random() <= 0.5);
+        }
+        /**
+         * @return the in-order successor of this node, traversing the left or right path based on the argument
+         * We traverse till we reach the closest node that is also a leaf.
+         * If this Node is a leaf, we will return this node
+         */
+        public Node getInorderSuccessor(boolean right) {
+            // find the replacementNode that will be put in the place of node. replacementNode will be a leaf
+            SearchFlags searchForNode = right ? SearchFlags.LESS_OR_EQUAL : SearchFlags.GREATER_OR_EQUAL;
+            return (right ? getRight() : getLeft()).lookup(getElem(), searchForNode);
+        }
+
         /**
          * looks up a value in subtrees of this node, including this node
          */

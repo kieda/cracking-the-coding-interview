@@ -152,6 +152,126 @@ public class RedBlackTree<X extends Comparable<X>> extends BinarySearchTree<X>{
     }
 
     public void remove(Node node) {
-        
+        if(node.isHead() && node.isLeaf()) {
+            // head and single node tree
+            setHead(null);
+            return;
+        } else if(node.getColor().isRed() && node.isLeaf()) {
+            // red leafs can simply be replaced
+            ParentRelation.getRelation(node).replaceNode(node, null);
+            node.setParent(null);
+            return;
+        } else if(!node.isLeaf() && !node.isFull()) {
+            // either left or right is not null, but not both
+            boolean resetHead = node.isHead();
+
+            Node replacement;
+            if((replacement = node.getLeft()) != null) {
+            } else {
+                replacement = node.getRight();
+            }
+
+            replacement.setParent(node.getParent());
+            ParentRelation.getRelation(node).replaceNode(node, replacement);
+
+            if(resetHead)
+                setHead(replacement);
+            replacement.setColor(Color.BLACK);
+            node.setLeft(null);
+            node.setRight(null);
+            node.setParent(null);
+            return;
+        } else if(node.isFull()){
+            // find the replacementNode that will be put in the place of node. replacementNode will be a leaf
+            Node replacementNode = (Node)node.getInorderSuccessorRandom();
+
+            // parent, left, and right in the middle of the tree
+            Node parent = node.getParent();
+            Node left = node.getLeft();
+            Node right = node.getRight();
+
+            Node removalPoint = replacementNode.getParent();
+            Color replacementColor = replacementNode.getColor();
+            ParentRelation removalRelation = ParentRelation.getRelation(replacementNode);
+
+            // this node is replaced with our replacement node
+            ParentRelation.getRelation(node).replaceNode(node, replacementNode);
+            replacementNode.setLeft(left);
+            replacementNode.setRight(right);
+            replacementNode.setParent(parent);
+            left.setParent(replacementNode);
+            right.setParent(replacementNode);
+
+            // replacement node is swapped with this node
+            node.setParent(removalPoint);
+            removalRelation.setChild(removalPoint, node);
+
+            // swap the colors
+            replacementNode.setColor(node.getColor());
+            node.setColor(replacementColor);
+
+            // node is now a leaf. If it's red it is easily removed in the next following call
+            // if it is black it falls through to the case below...
+            remove(node);
+            return;
+        } else {
+            // default case: node is a black leaf, node is not head
+            Node parent = node.getParent();
+            ParentRelation direction = ParentRelation.getRelation(node);
+            Node sibling = (Node)direction.getOppositeSibling(node);
+            Node close = (Node)direction.getChild(sibling);
+            Node distant = (Node)direction.getOpposite().getChild(sibling);
+
+            // remove node from this tree
+            direction.replaceNode(node, null);
+            node.setParent(null);
+
+            do {
+                Color parentColor = Color.getColor(parent);
+                Color siblingColor = Color.getColor(sibling);
+                Color closeColor = Color.getColor(close);
+                Color distantColor = Color.getColor(distant);
+
+                if(parentColor.isBlack() && siblingColor.isBlack()
+                    && closeColor.isBlack() && distantColor.isBlack()) {
+                    // ALL_BLACK
+                    sibling.setColor(Color.RED);
+                    direction = ParentRelation.getRelation(parent);
+                    if((parent = parent.getParent()) == null)
+                        return;
+                } else if(siblingColor.isRed() && parentColor.isBlack()
+                        && closeColor.isBlack() && distantColor.isBlack()) {
+                    // SIBLING_RED
+                    parent.rotate(direction);
+                    parent.setColor(Color.RED);
+                    sibling.setColor(Color.BLACK);
+                } else if(parentColor.isRed() && siblingColor.isBlack()
+                    && closeColor.isBlack() && distantColor.isBlack()) {
+                    // PARENT_RED
+                    sibling.setColor(Color.RED);
+                    parent.setColor(Color.BLACK);
+                    return;
+                } else if(closeColor.isRed() && siblingColor.isBlack() && distantColor.isBlack()) {
+                    // CLOSE_RED
+                    sibling.rotate(direction.getOpposite());
+                    sibling.setColor(Color.RED);
+                    close.setColor(Color.BLACK);
+                } else if(distantColor.isRed() && siblingColor.isBlack()) {
+                    // DISTANT_RED
+                    parent.rotate(direction);
+                    sibling.setColor(parent.getColor());
+                    parent.setColor(Color.BLACK);
+                    sibling.setColor(Color.BLACK);
+                    return;
+                } else {
+                    // should never occur
+                    throw new IllegalStateException("Invalid red black tree");
+                }
+
+                sibling = (Node)direction.getOpposite().getChild(parent);
+                close = (Node)direction.getChild(sibling);
+                distant = (Node)direction.getOpposite().getChild(sibling);
+            } while(true);
+        }
     }
 }

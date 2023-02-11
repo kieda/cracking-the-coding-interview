@@ -482,12 +482,8 @@ public class AVLTree<E extends Comparable<E>> extends BinarySearchTree<E> {
                 return;
             }
         } else {
-            // randomize which node we'll swap with - traversing down right or left child
-            boolean swapRight = Math.random() <= 0.5;
-
             // find the replacementNode that will be put in the place of node. replacementNode will be a leaf
-            SearchFlags searchForNode = swapRight ? SearchFlags.LESS_OR_EQUAL : SearchFlags.GREATER_OR_EQUAL;
-            Node replacementNode = (Node)(swapRight ? node.getRight() : node.getLeft()).lookup(node.getElem(), searchForNode);
+            Node replacementNode = (Node)node.getInorderSuccessorRandom();
 
             // parent, left, and right in the middle of the tree
             Node parent = node.getParent();
