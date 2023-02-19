@@ -1,7 +1,7 @@
 package common.tree;
 
+import chapter4.Successor;
 import common.function.Function3;
-import common.tests.InvalidArgumentException;
 import common.tuple.Tuple2;
 
 import java.util.Map;
@@ -64,89 +64,6 @@ public class BinaryTree<E> {
                 return NONE;
             ParentRelation grandparentRelation = ParentRelation.getRelation(node.getParent());
             return lookupMap.getOrDefault(Tuple2.make(parentRelation, grandparentRelation), GrandparentRelation.NONE);
-        }
-    }
-
-    enum ParentRelation {
-        HEAD,
-        LEFT,
-        RIGHT,
-        NONE;
-
-        public <E> void replaceNode(BinaryTree<E>.Node node, BinaryTree<E>.Node replacement) {
-            BinaryTree<E>.Node parent = node.getParent();
-            switch(this) {
-                case HEAD:
-                    break;
-                case LEFT:
-                    parent.setLeft(replacement);
-                    break;
-                case RIGHT:
-                    parent.setRight(replacement);
-                    break;
-                case NONE:
-                    throwMissingChild(parent, node);
-            }
-        }
-
-        public ParentRelation getOpposite() {
-            switch (this) {
-                case LEFT:
-                    return RIGHT;
-                case RIGHT:
-                    return LEFT;
-                default:
-                    return this;
-            }
-        }
-        public <E> BinaryTree<E>.Node getChild(BinaryTree<E>.Node node) {
-            switch (this) {
-                case LEFT:
-                    return node.getLeft();
-                case RIGHT:
-                    return node.getRight();
-                default:
-                    throw new IllegalArgumentException("Cannot get child from node with relation " + this);
-            }
-        }
-        public <E> void setChild(BinaryTree<E>.Node node, BinaryTree<E>.Node replacement) {
-            switch(this) {
-                case LEFT:
-                    node.setLeft(replacement);
-                    break;
-                case RIGHT:
-                    node.setRight(replacement);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Cannot set child with invalid relation " + this);
-            }
-        }
-
-        public static <E> ParentRelation getRelation(BinaryTree<E>.Node node) {
-            BinaryTree<E>.Node parent = node.getParent();
-            if(parent == null) {
-                return HEAD;
-            } else if(parent.getLeft() == node) {
-                return LEFT;
-            } else if(parent.getRight() == node) {
-                return RIGHT;
-            } else {
-                return NONE;
-            }
-        }
-
-        public <E> BinaryTree<E>.Node getOppositeSibling(BinaryTree<E>.Node node) {
-            BinaryTree<E>.Node parent = node.getParent();
-            switch(this) {
-                case LEFT:
-                    return parent.getRight();
-                case RIGHT:
-                    return parent.getLeft();
-                default:
-                    throwMissingChild(parent, node);
-            }
-            // will never occur from throw statement above, but java compiler will complain otherwise.
-            return null;
         }
     }
 
@@ -568,12 +485,19 @@ public class BinaryTree<E> {
         return head == null;
     }
 
+    public <A> A traverseElems(A initial, BiFunction<A, E, A> accumulator) {
+        return traverseElems(initial, accumulator, (a, elem) -> false);
+    }
+
+    public <A> A traverseElems(A initial, BiFunction<A, E, A> accumulator, BiPredicate<A, E> stop) {
+        return traverseNodes(initial, (a, node) -> accumulator.apply(a, node.getElem()), (a, node ) -> stop.test(a, node.getElem()));
+    }
 
     /**
      * traverses through the entire tree, without stopping
      */
-    public <A> A traverse(A initial, BiFunction<A, Node, A> accumulator) {
-        return traverse(initial, accumulator, (a, elem) -> false);
+    public <A> A traverseNodes(A initial, BiFunction<A, Node, A> accumulator) {
+        return traverseNodes(initial, accumulator, (a, elem) -> false);
     }
 
     /**
@@ -582,7 +506,7 @@ public class BinaryTree<E> {
      * and will return the result. Note that stop here does not immediately exit the traversal, since we may have
      * nodes that need to be restored to their previous configuration
      */
-    public <A> A traverse(A initial, BiFunction<A, Node, A> accumulator, BiPredicate<A, E> stop) {
+    public <A> A traverseNodes(A initial, BiFunction<A, Node, A> accumulator, BiPredicate<A, Node> stop) {
         int edgesAdded = 0;
         boolean stopVisiting = false;
         Node current = getHead();
@@ -592,7 +516,7 @@ public class BinaryTree<E> {
                     // visit current node
                     initial = accumulator.apply(initial, current);
                     // test for stopping condition
-                    stopVisiting = stop.test(initial, current.getElem());
+                    stopVisiting = stop.test(initial, current);
 
                     // stop condition: we reset all our edges and we've reached a stopping point
                     if(edgesAdded == 0 && stopVisiting)
@@ -621,12 +545,86 @@ public class BinaryTree<E> {
                     // visit the current node
                     if(!stopVisiting) {
                         initial = accumulator.apply(initial, current);
-                        stopVisiting = stop.test(initial, current.getElem());
+                        stopVisiting = stop.test(initial, current);
                     }
 
                     current = current.getRight();
                 }
             }
+        }
+        return initial;
+    }
+
+
+    public <A, N extends BinaryTree<E>.Node> A traverse(A initial, BinaryTreeTraverser<A, E, N> traverser) {
+        return traverse(initial, (N) getHead(), traverser);
+    }
+
+    public <A, N extends BinaryTree<E>.Node> A traverse(A initial, N start, BinaryTreeTraverser<A, E, N> traverser) {
+        return traverse(initial, start, traverser::visitNode, traverser::visitDown, traverser::visitUp, traverser::stop);
+    }
+    public <A, N extends BinaryTree<E>.Node> A traverse(A initial, N start, Function3<A, N, ParentRelation, A> visitNode,
+            Function3<A, N, ParentRelation, A> visitDown, Function3<A, N, ParentRelation, A> visitUp, BiPredicate<A, N> stop) {
+        N previous = null;
+        N node = start;
+
+        // get leftmost item
+        N firstElem = start;
+        if(firstElem != null)
+            initial = visitDown.apply(initial, firstElem, ParentRelation.HEAD);
+        while(firstElem != null && firstElem.getLeft() != null) {
+            firstElem = (N) firstElem.getLeft();
+            initial = visitDown.apply(initial, firstElem, ParentRelation.LEFT);
+        }
+        /*visitorInfo.setDepth(depth);
+        visitorInfo.setNode(node);
+        visitorInfo.setDirection(ParentRelation.HEAD); */
+        // stop and return if we run out of nodes, if we reach our stop condition
+        // note that the condition may traverse into negative depth (above our initial node)
+        // if this is not desired, ensure this is in the stop condition
+        while(node != null && !stop.test(initial, node)) {
+            // determine direction from previous visited node to this node
+            ParentRelation direction;
+            if(previous == null)
+                direction = ParentRelation.HEAD;
+            else if(node.getLeft() == previous || previous.getRight() == node)
+                direction = ParentRelation.RIGHT;
+            else if(node.getRight() == previous || previous.getLeft() == node)
+                direction = ParentRelation.LEFT;
+            else
+                direction = ParentRelation.NONE;
+
+            initial = visitNode.apply(initial, node, direction);
+
+            // get the next in-order node in the traversal
+            N nextNode = null;
+            {
+                N last = null; // keep previous node so we don't traverse back down the tree
+                while (node != null) {
+                    if (node.getRight() != null && node.getRight() != last) {
+                        N result = (N) node.getRight();
+                        initial = visitDown.apply(initial, result, ParentRelation.RIGHT);
+                        while (result.getLeft() != null) {
+                            result = (N) result.getLeft();
+                            initial = visitDown.apply(initial, result, ParentRelation.LEFT);
+                        }
+                        nextNode = result;
+                        break;
+                    } else if (ParentRelation.getRelation(node) == ParentRelation.RIGHT) {
+                        last = node;
+                        // if we're to the right of our parent we continue traversing up
+                        nextNode = (N) node.getParent();
+                        initial = visitUp.apply(initial, nextNode, ParentRelation.RIGHT);
+                    } else {
+                        // if the child is on the left hand side, parent will be next element
+                        nextNode = (N) node.getParent();
+                        initial = visitUp.apply(initial, nextNode, ParentRelation.LEFT);
+                        break;
+                    }
+                }
+            }
+            previous = node;
+            node = nextNode;
         }
         return initial;
     }

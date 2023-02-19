@@ -1,13 +1,26 @@
 package common.tree;
 
+import common.HasMin;
 import common.Sort;
+import common.lists.EmptyCollectionException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X>{
+public class BinarySearchTree<X extends Comparable<X>> extends BinaryTree<X> implements HasMin<X> {
+    @Override
+    public X getMin() {
+        if(isEmpty())
+            throw new EmptyCollectionException();
+        Node least = getHead();
+        while(least.getParent() != null) {
+            least = least.getParent();
+        }
+        return least.getElem();
+    }
+
     public class Node extends BinaryTree<X>.Node{
         public Node(X elem) {
             super(elem);

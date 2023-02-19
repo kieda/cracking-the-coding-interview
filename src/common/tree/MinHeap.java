@@ -226,7 +226,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
     }
 
     public Node findFirst(X elem) {
-        return traverse(null, (found, node) -> (Node)node, (accum, node) -> Sort.compare(node, elem) == 0);
+        return traverseNodes(null, (found, node) -> (Node)node, (accum, node) -> Sort.compare(node.getElem(), elem) == 0);
     }
 
     /**
@@ -238,7 +238,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
      * With a little XOR magic and since we know this is a complete binary tree we can find out a traversal pattern
      * using O(1) space and without modifying the tree structure (unlike the morris traversal).
      */
-    public <A> A traverse(A initial, BiFunction<A, BinaryTree<X>.Node, A> accumulator, BiPredicate<A, X> stop) {
+    public <A> A traverseNodes(A initial, BiFunction<A, BinaryTree<X>.Node, A> accumulator, BiPredicate<A, BinaryTree<X>.Node> stop) {
         if(isEmpty())
             return initial;
 
@@ -259,7 +259,7 @@ public class MinHeap<X extends Comparable<X>> extends BinaryTree<X> implements H
             initial = accumulator.apply(initial, node);
 
             // stop condition (e.g. for searches)
-            if(stop.test(initial, node.getElem()))
+            if(stop.test(initial, node))
                 return initial;
 
             // otherwise, visit the next node
