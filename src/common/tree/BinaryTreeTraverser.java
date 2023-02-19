@@ -11,17 +11,23 @@ public interface BinaryTreeTraverser<A, E, N extends BinaryTree<E>.Node> {
      * Does not necessarily mean we are visiting a new node, and we may visit the same node more than once.
      * This should be used to do things like modify our current depth
      */
-    public A visitUp(A accumulator, N node, ParentRelation relation);
+    public default A visitUp(A accumulator, N node, ParentRelation relation) {
+        return accumulator;
+    };
 
     /**
      * when we are traversing and we go down a level in our tree.
      * Does not necessarily mean we are visiting a new or unique node, and we may visit the same node more than once.
      * This should be used to do things like modify our current depth
      */
-    public A visitDown(A accumulator, N node, ParentRelation relation);
+    public default A visitDown(A accumulator, N node, ParentRelation relation) {
+        return accumulator;
+    };
 
     /**
      * Condition to stop our traversal.
      */
-    public boolean stop(A accumulator, N node);
+    public default boolean stop(A accumulator, N node) {
+        return false;
+    };
 }

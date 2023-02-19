@@ -2,6 +2,8 @@ package chapter4;
 
 import common.Sort;
 import common.tree.BinaryTree;
+import common.tree.BinaryTreeTraverser;
+import common.tree.ParentRelation;
 import common.tuple.Tuple2;
 
 import java.util.Optional;
@@ -11,23 +13,36 @@ import java.util.Optional;
  */
 public class ValidateBST<X extends Comparable<X>> {
     public boolean isBinarySearchTreeInOrder(BinaryTree<X> tree) {
-        // todo - traverse with current depth passed in. This would cover cases where there are duplicates if we check
-        //        that if previous == current then previousDepth also has to be below currentDepth
-        return tree.traverseNodes(
-            new Tuple2<Boolean, Optional<X>>(true, Optional.empty()),
-            (accum, node) -> {
-                if(accum.getSecond().isEmpty())
-                    accum.setSecond(Optional.of(node.getElem()));
-                else if(Sort.compare(accum.getSecond().get(), node.getElem()) > 0)
-                    accum.setFirst(false); // next item is greater than our current one, BST invariant is invalid and we exit
+        /*
+         * O(N) time
+         * O(1) space
+         */
+        return tree.traverse(new Tuple2<Boolean, Optional<X>>(true, Optional.empty()),
+                new BinaryTreeTraverser<>() {
+                    @Override
+                    public Tuple2<Boolean, Optional<X>> visitNode(Tuple2<Boolean, Optional<X>> accumulator, BinaryTree<X>.Node node, ParentRelation relation) {
+                        if(accumulator.getSecond().isEmpty())
+                            accumulator.setSecond(Optional.of(node.getElem()));
+                        else {
+                            int comparison = Sort.compare(accumulator.getSecond().get(), node.getElem());
+                            if(comparison > 0 || (comparison == 0 && relation != ParentRelation.LEFT))
+                                // next item is greater than our current one, BST invariant is invalid and we exit
+                                // or, next item is the same as this one but is not situated to the LEFT then the BST invariant is invalid
+                                accumulator.setFirst(false);
+                        }
 
-                accum.setSecond(Optional.of(node.getElem()));
-                return accum;
-            },
-            // Exit early
-            (accum, elem) -> !accum.getFirst()
-        ).getFirst();
+                        accumulator.setSecond(Optional.of(node.getElem()));
+                        return accumulator;
+                    }
+
+                    @Override
+                    public boolean stop(Tuple2<Boolean, Optional<X>> accumulator, BinaryTree<X>.Node node) {
+                        return !accumulator.getFirst();
+                    }
+                }).getFirst();
     }
+
+
     private boolean isBinarySearchTreeRecursive(BinaryTree<X>.Node node, Optional<X> min, Optional<X> max) {
         // base case: no node is a valid BST
         if(node == null)
@@ -44,6 +59,10 @@ public class ValidateBST<X extends Comparable<X>> {
             return false;
         return true;
     }
+    /*
+     * O(N) time
+     * O(log n) space
+     */
     public boolean isBinarySearchTreeMinMax(BinaryTree<X> tree) {
         return isBinarySearchTreeRecursive(tree.getHead(), Optional.empty(), Optional.empty());
     }

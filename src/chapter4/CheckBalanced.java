@@ -55,7 +55,7 @@ public class CheckBalanced {
             return true;
 
         // traverse in-order and add depth count to the list for each one.
-        List<Integer> depthCounts = tree.traverse(new IsBalancedAccumulator(), new DepthTraverser<>((a, n, dir) -> {
+        List<Integer> depthCounts = tree.traverse(new IsBalancedAccumulator(), new DepthTraverser<IsBalancedAccumulator, X, BinaryTree<X>.Node>((a, n, dir) -> {
             a.addDepthCount();
             return a;
         })).getDepthCounts();

@@ -8,9 +8,6 @@ import java.util.function.BiPredicate;
 public class DepthTraverser<A extends DepthTraverser.DepthAccumulator, E, N extends BinaryTree<E>.Node> implements BinaryTreeTraverser<A, E, N>{
     private BinaryTreeTraverser<A, E, N> delegate;
 
-    public DepthTraverser(Function3<A, N, ParentRelation, A> visitNode) {
-        this(visitNode, (a, n) -> a.getDepth() < 0);
-    }
     public DepthTraverser(Function3<A, N, ParentRelation, A> visitNode, BiPredicate<A, N> stop) {
         this.delegate = new BinaryTreeTraverser<A, E, N>() {
             @Override

@@ -576,9 +576,7 @@ public class BinaryTree<E> {
             firstElem = (N) firstElem.getLeft();
             initial = visitDown.apply(initial, firstElem, ParentRelation.LEFT);
         }
-        /*visitorInfo.setDepth(depth);
-        visitorInfo.setNode(node);
-        visitorInfo.setDirection(ParentRelation.HEAD); */
+
         // stop and return if we run out of nodes, if we reach our stop condition
         // note that the condition may traverse into negative depth (above our initial node)
         // if this is not desired, ensure this is in the stop condition
@@ -587,9 +585,9 @@ public class BinaryTree<E> {
             ParentRelation direction;
             if(previous == null)
                 direction = ParentRelation.HEAD;
-            else if(node.getLeft() == previous || previous.getRight() == node)
+            else if(node.getRight() == previous || previous.getRight() == node)
                 direction = ParentRelation.RIGHT;
-            else if(node.getRight() == previous || previous.getLeft() == node)
+            else if(node.getLeft() == previous || previous.getLeft() == node)
                 direction = ParentRelation.LEFT;
             else
                 direction = ParentRelation.NONE;
