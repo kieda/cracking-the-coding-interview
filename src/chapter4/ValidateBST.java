@@ -3,6 +3,7 @@ package chapter4;
 import common.Sort;
 import common.tree.BinaryTree;
 import common.tree.BinaryTreeTraverser;
+import common.tree.DepthTraverser;
 import common.tree.ParentRelation;
 import common.tuple.Tuple2;
 
@@ -17,29 +18,28 @@ public class ValidateBST<X extends Comparable<X>> {
          * O(N) time
          * O(1) space
          */
-        return tree.traverse(new Tuple2<Boolean, Optional<X>>(true, Optional.empty()),
-                new BinaryTreeTraverser<>() {
-                    @Override
-                    public Tuple2<Boolean, Optional<X>> visitNode(Tuple2<Boolean, Optional<X>> accumulator, BinaryTree<X>.Node node, ParentRelation relation) {
-                        if(accumulator.getSecond().isEmpty())
-                            accumulator.setSecond(Optional.of(node.getElem()));
-                        else {
-                            int comparison = Sort.compare(accumulator.getSecond().get(), node.getElem());
-                            if(comparison > 0 || (comparison == 0 && relation != ParentRelation.LEFT))
-                                // next item is greater than our current one, BST invariant is invalid and we exit
-                                // or, next item is the same as this one but is not situated to the LEFT then the BST invariant is invalid
-                                accumulator.setFirst(false);
-                        }
+        Tuple2<Boolean, Optional<X>> initial = Tuple2.make(true, Optional.empty());
+        return tree.traverse(
+                new DepthTraverser.DepthAccumulator<>(initial),
+                new DepthTraverser<>(
+                        (a, node) -> {
+                            Tuple2<Boolean, Optional<X>> state = a.getElem();
+                            if(state.getSecond().isEmpty())
+                                state.setSecond(Optional.of(node.getElem()));
+                            else {
+                                int comparison = Sort.compare(state.getSecond().get(), node.getElem());
+                                if(comparison > 0 || (comparison == 0 && a.getRelation() != ParentRelation.LEFT))
+                                    // next item is greater than our current one, BST invariant is invalid and we exit
+                                    // or, next item is the same as this one but is not situated to the LEFT then the BST invariant is invalid
+                                    state.setFirst(false);
+                            }
 
-                        accumulator.setSecond(Optional.of(node.getElem()));
-                        return accumulator;
-                    }
-
-                    @Override
-                    public boolean stop(Tuple2<Boolean, Optional<X>> accumulator, BinaryTree<X>.Node node) {
-                        return !accumulator.getFirst();
-                    }
-                }).getFirst();
+                            state.setSecond(Optional.of(node.getElem()));
+                            a.setElem(state);
+                            return a;
+                        },
+                        (a, node) -> !a.getElem().getFirst()
+                )).getElem().getFirst();
     }
 
 

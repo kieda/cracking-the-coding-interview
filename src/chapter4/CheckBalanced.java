@@ -1,9 +1,7 @@
 package chapter4;
 
 import common.tree.BinaryTree;
-import common.tree.BinaryTreeTraverser;
 import common.tree.DepthTraverser;
-import common.tree.ParentRelation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,31 +17,6 @@ public class CheckBalanced {
     }
 
 
-
-
-    private class IsBalancedAccumulator extends DepthTraverser.DepthAccumulator {
-        private List<Integer> depthCounts;
-        public IsBalancedAccumulator() {
-            this.depthCounts = new ArrayList<>();
-        }
-
-        private void expand(int lastIndex) {
-            while(depthCounts.size() <= lastIndex) {
-                depthCounts.add(0);
-            }
-        }
-
-        public void addDepthCount() {
-            int depth = getDepth();
-            expand(depth);
-            depthCounts.set(depth, depthCounts.get(depth) + 1);
-        }
-
-        public List<Integer> getDepthCounts() {
-            return depthCounts;
-        }
-    }
-
     /**
      * perform an in-order traversal of all of the nodes
      * @param tree
@@ -53,12 +26,17 @@ public class CheckBalanced {
     public <X> boolean isBalancedInOrder(BinaryTree<X> tree) {
         if(tree.isEmpty())
             return true;
-
+        List<Integer> initial = new ArrayList<>();
         // traverse in-order and add depth count to the list for each one.
-        List<Integer> depthCounts = tree.traverse(new IsBalancedAccumulator(), new DepthTraverser<IsBalancedAccumulator, X, BinaryTree<X>.Node>((a, n, dir) -> {
-            a.addDepthCount();
+        List<Integer> depthCounts = tree.traverse(new DepthTraverser.DepthAccumulator<>(initial), new DepthTraverser<>((a, n) -> {
+            int depth = a.getDepth();
+            List<Integer> counts = a.getElem();
+            while(counts.size() <= depth) {
+                counts.add(0);
+            }
+            counts.set(depth, counts.get(depth) + 1);
             return a;
-        })).getDepthCounts();
+        })).getElem();
 
         // everthing should be filled, except for the last row (which may be partially full)
         int expectedFill = 1;

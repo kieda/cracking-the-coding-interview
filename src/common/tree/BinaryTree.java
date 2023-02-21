@@ -563,18 +563,59 @@ public class BinaryTree<E> {
     public <A, N extends BinaryTree<E>.Node> A traverse(A initial, N start, BinaryTreeTraverser<A, E, N> traverser) {
         return traverse(initial, start, traverser::visitNode, traverser::visitDown, traverser::visitUp, traverser::stop);
     }
-    public <A, N extends BinaryTree<E>.Node> A traverse(A initial, N start, Function3<A, N, ParentRelation, A> visitNode,
-            Function3<A, N, ParentRelation, A> visitDown, Function3<A, N, ParentRelation, A> visitUp, BiPredicate<A, N> stop) {
-        N previous = null;
+
+    public <A, N extends BinaryTree<E>.Node> void nextNode(Tuple2<A, N> initial, BinaryTreeTraverser<A, E, N> traverser) {
+        A accum = initial.getFirst();
+        N node = initial.getSecond();
+
+        if(node == null || traverser.stop(accum, node)) {
+            initial.setSecond(null);
+            return;
+        }
+
+        accum = traverser.visitNode(accum, node);
+
+        // get the next in-order node in the traversal
+        N last = null; // keep previous node so we don't traverse back down the tree
+        while (node != null) {
+            if (node.getRight() != null && node.getRight() != last) {
+                N result = (N) node.getRight();
+                accum = traverser.visitDown(accum, result);
+                while (result.getLeft() != null) {
+                    result = (N) result.getLeft();
+                    accum = traverser.visitDown(accum, result);
+                }
+                node = result;
+                break;
+            } else if (ParentRelation.getRelation(node) == ParentRelation.RIGHT) {
+                last = node;
+                // if we're to the right of our parent we continue traversing up
+                node = (N) node.getParent();
+                accum = traverser.visitUp(accum, node);
+            } else {
+                // if the child is on the left hand side, parent will be next element
+                node = (N) node.getParent();
+                accum = traverser.visitUp(accum, node);
+                break;
+            }
+        }
+
+        initial.setFirst(accum);
+        initial.setSecond(node);
+    }
+
+    public <A, N extends BinaryTree<E>.Node> A traverse(A initial, N start, BiFunction<A, N, A> visitNode,
+            BiFunction<A, N, A> visitDown, BiFunction<A, N, A> visitUp, BiPredicate<A, N> stop) {
+        // todo - merge with above function
         N node = start;
 
         // get leftmost item
         N firstElem = start;
         if(firstElem != null)
-            initial = visitDown.apply(initial, firstElem, ParentRelation.HEAD);
+            initial = visitDown.apply(initial, firstElem);
         while(firstElem != null && firstElem.getLeft() != null) {
             firstElem = (N) firstElem.getLeft();
-            initial = visitDown.apply(initial, firstElem, ParentRelation.LEFT);
+            initial = visitDown.apply(initial, firstElem);
         }
 
         // stop and return if we run out of nodes, if we reach our stop condition
@@ -582,48 +623,39 @@ public class BinaryTree<E> {
         // if this is not desired, ensure this is in the stop condition
         while(node != null && !stop.test(initial, node)) {
             // determine direction from previous visited node to this node
-            ParentRelation direction;
-            if(previous == null)
-                direction = ParentRelation.HEAD;
-            else if(node.getRight() == previous || previous.getRight() == node)
-                direction = ParentRelation.RIGHT;
-            else if(node.getLeft() == previous || previous.getLeft() == node)
-                direction = ParentRelation.LEFT;
-            else
-                direction = ParentRelation.NONE;
 
-            initial = visitNode.apply(initial, node, direction);
+            initial = visitNode.apply(initial, node);
 
             // get the next in-order node in the traversal
-            N nextNode = null;
+            N nextNode = node;
             {
                 N last = null; // keep previous node so we don't traverse back down the tree
-                while (node != null) {
-                    if (node.getRight() != null && node.getRight() != last) {
-                        N result = (N) node.getRight();
-                        initial = visitDown.apply(initial, result, ParentRelation.RIGHT);
+                while (nextNode != null) {
+                    if (nextNode.getRight() != null && nextNode.getRight() != last) {
+                        N result = (N) nextNode.getRight();
+                        initial = visitDown.apply(initial, result);
                         while (result.getLeft() != null) {
                             result = (N) result.getLeft();
-                            initial = visitDown.apply(initial, result, ParentRelation.LEFT);
+                            initial = visitDown.apply(initial, result);
                         }
                         nextNode = result;
                         break;
-                    } else if (ParentRelation.getRelation(node) == ParentRelation.RIGHT) {
-                        last = node;
+                    } else if (ParentRelation.getRelation(nextNode) == ParentRelation.RIGHT) {
+                        last = nextNode;
                         // if we're to the right of our parent we continue traversing up
-                        nextNode = (N) node.getParent();
-                        initial = visitUp.apply(initial, nextNode, ParentRelation.RIGHT);
+                        nextNode = (N) nextNode.getParent();
+                        initial = visitUp.apply(initial, nextNode);
                     } else {
                         // if the child is on the left hand side, parent will be next element
-                        nextNode = (N) node.getParent();
-                        initial = visitUp.apply(initial, nextNode, ParentRelation.LEFT);
+                        nextNode = (N) nextNode.getParent();
+                        initial = visitUp.apply(initial, nextNode);
                         break;
                     }
                 }
             }
-            previous = node;
             node = nextNode;
         }
+
         return initial;
     }
 }

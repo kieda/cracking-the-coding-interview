@@ -1,7 +1,6 @@
 package chapter4;
 
 import common.lists.DoubleLinkedList;
-import common.lists.SingleLinkedList;
 import common.tree.BinaryTree;
 import common.tree.DepthTraverser;
 
@@ -13,34 +12,18 @@ import java.util.List;
  * at each depth (e.g., if you have a tree with depth D, you'll have D linked lists).
  */
 public class ListOfDepths<X> {
-
-    private class ListOfDepthsAccumulator extends DepthTraverser.DepthAccumulator {
-        private List<DoubleLinkedList<BinaryTree<X>.Node>> depthItems;
-        public ListOfDepthsAccumulator() {
-            this.depthItems = new ArrayList<>();
-        }
-
-        private void expand(int lastIndex) {
-            while(depthItems.size() <= lastIndex) {
-                depthItems.add(new DoubleLinkedList<>());
-            }
-        }
-
-        public void addNode(BinaryTree<X>.Node node) {
-            int depth = getDepth();
-            expand(depth);
-            depthItems.get(depth).addLast(node);
-        }
-
-        public List<DoubleLinkedList<BinaryTree<X>.Node>> getDepthItems() {
-            return depthItems;
-        }
-    }
-
     public List<DoubleLinkedList<BinaryTree<X>.Node>> getNodesAtDepths(BinaryTree<X> tree) {
-        return tree.traverse(new ListOfDepthsAccumulator(), new DepthTraverser<>((a, n, dir) -> {
-            a.addNode(n);
+        List<DoubleLinkedList<BinaryTree<X>.Node>> initial = new ArrayList<>();
+        return tree.traverse(new DepthTraverser.DepthAccumulator<>(initial), new DepthTraverser<>((a, n) -> {
+            int depth = a.getDepth();
+            List<DoubleLinkedList<BinaryTree<X>.Node>> elem = a.getElem();
+            while(elem.size() <= depth) {
+                elem.add(new DoubleLinkedList<>());
+            }
+
+            elem.get(depth).addLast(n);
+            a.setElem(elem);
             return a;
-        })).getDepthItems();
+        })).getElem();
     }
 }
