@@ -564,7 +564,7 @@ public class BinaryTree<E> {
         return traverse(initial, start, traverser::visitNode, traverser::visitDown, traverser::visitUp, traverser::stop);
     }
 
-    public <A, N extends BinaryTree<E>.Node> void nextNode(Tuple2<A, N> initial, BinaryTreeTraverser<A, E, N> traverser) {
+    public static <A, X, N extends BinaryTree<X>.Node> void nextNode(Tuple2<A, N> initial, BinaryTreeTraverser<A, X, N> traverser) {
         A accum = initial.getFirst();
         N node = initial.getSecond();
 
