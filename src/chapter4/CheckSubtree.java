@@ -41,17 +41,17 @@ public class CheckSubtree<X> {
     private class SubtreeTraverser implements BinaryTreeTraverser<DepthAccumulator<SubtreeAccumulator>, X, BinaryTree<X>.Node> {
         private int leftMostDepthDelta;
         private final BinaryTree<X>.Node t2LeftMost;
-        private Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t1Accumulator;
-        private Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t2Accumulator;
+        private Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t1Increment;
+        private Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t2Increment;
 
         // todo - move t2Accumulator to SubtreeAccumulator. t2Accumulator will also keep track of our current node in t2
         public SubtreeTraverser(BinaryTree<X>.Node leftMost, int leftMostDepthDelta,
                                 // used to advance T1 and T2 to the next node
-                                Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t1Accumulator,
-                                Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t2Accumulator ) {
+                                Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t1Increment,
+                                Tuple2<DepthAccumulator<Void>, BinaryTree<X>.Node> t2Increment ) {
             this.t2LeftMost = leftMost;
-            this.t1Accumulator = t1Accumulator;
-            this.t2Accumulator = t2Accumulator;
+            this.t1Increment = t1Increment;
+            this.t2Increment = t2Increment;
             this.leftMostDepthDelta = leftMostDepthDelta;
         }
 
@@ -59,9 +59,9 @@ public class CheckSubtree<X> {
         public DepthAccumulator<SubtreeAccumulator> visitNode(DepthAccumulator<SubtreeAccumulator> accumulator, BinaryTree<X>.Node t1Node) {
             SubtreeAccumulator elem = accumulator.getElem();
             // traverse T2 forward
-            BinaryTree.nextNode(t2Accumulator, simpleTraverse);
+            BinaryTree.nextNode(t2Increment, simpleTraverse);
             int t1Depth = accumulator.getDepth();
-            int t2Depth = t2Accumulator.getFirst().getDepth(); // current depth
+            int t2Depth = t2Increment.getFirst().getDepth(); // current depth
 
             // we are already traversing a tree, however if this one does not work out set the restartNode
             // restartNode is set to the next node after this one in T1 so we don't have to check this twice
@@ -70,14 +70,14 @@ public class CheckSubtree<X> {
                     && Objects.equals(t1Node.getElem(), t2LeftMost.getElem())) {
                 // if we have to restart, restart from the next node right after the first match
                 // also store the depth that this traversal took, which is used in our next traversal
-                t1Accumulator.setSecond(t1Node);
-                t1Accumulator.getFirst().setDepth(t1Depth);
-                BinaryTree.nextNode(t1Accumulator, simpleTraverse);
-                elem.restartNode = t1Accumulator.getSecond();
+                t1Increment.setSecond(t1Node);
+                t1Increment.getFirst().setDepth(t1Depth);
+                BinaryTree.nextNode(t1Increment, simpleTraverse);
+                elem.restartNode = t1Increment.getSecond();
 
                 // the delta we add to the depth when we restart from the restartNode
                 // should be final T1 depth - initial T1 depth
-                elem.restartDepthDelta = t1Accumulator.getFirst().getDepth() - t1Depth;
+                elem.restartDepthDelta = t1Increment.getFirst().getDepth() - t1Depth;
             }
 
             boolean nodesEqual = Objects.equals(t1Node.getElem(), elem.currentNode.getElem());
@@ -97,7 +97,7 @@ public class CheckSubtree<X> {
 
             if(nodesEqual && t1Depth == t2Depth) {
                 // we have another match from T1 to T2
-                elem.currentNode = t2Accumulator.getSecond();
+                elem.currentNode = t2Increment.getSecond();
                 elem.foundSubtree = true;
             } else if(elem.foundSubtree) {
                 // we are already traversing a subtree, but we found a mismatch either in the node we're visiting or in the depth
@@ -107,11 +107,11 @@ public class CheckSubtree<X> {
                 if(elem.restartNode == null) {
                     // restart T1 from the next position, after our mismatch
                     // also store the depth
-                    t1Accumulator.setSecond(t1Node);
-                    t1Accumulator.getFirst().setDepth(t1Depth);
-                    BinaryTree.nextNode(t2Accumulator, simpleTraverse);
-                    elem.restartNode = t1Accumulator.getSecond();
-                    elem.restartDepthDelta = t1Accumulator.getFirst().getDepth() - t1Depth;
+                    t1Increment.setSecond(t1Node);
+                    t1Increment.getFirst().setDepth(t1Depth);
+                    BinaryTree.nextNode(t2Increment, simpleTraverse);
+                    elem.restartNode = t1Increment.getSecond();
+                    elem.restartDepthDelta = t1Increment.getFirst().getDepth() - t1Depth;
                     elem.foundSubtree = false; // when we restart, we are not currently in a subtree
                 }
             }
@@ -123,7 +123,7 @@ public class CheckSubtree<X> {
         public boolean stop(DepthAccumulator<SubtreeAccumulator> accumulator, BinaryTree<X>.Node node) {
             // if it's a mismatch, we stop
             // we also stop if we have found a subtree and we have traversed t2 till there are no more nodes left
-            return accumulator.getElem().isMismatch || (accumulator.getElem().foundSubtree && t2Accumulator.getSecond() == null);
+            return accumulator.getElem().isMismatch || (accumulator.getElem().foundSubtree && t2Increment.getSecond() == null);
         }
     }
 
@@ -133,6 +133,8 @@ public class CheckSubtree<X> {
         if(t2.isEmpty())
             return true;
 
+        // get first two in-order nodes of T2
+        // when restarting a search, we can restart from the second node rather than starting from the first again.
         List<NodeAndDepth> t2LeftElems = t2.traverse(
                 new DepthAccumulator<>(new ArrayList<NodeAndDepth>(2)),
                 new DepthTraverser<>(
@@ -182,7 +184,7 @@ public class CheckSubtree<X> {
             // clear out t1 restart node
             t1Accumulator.restartNode = null;
             t1Accumulator.foundSubtree = result.getElem().foundSubtree;
-        } while(result.getElem().isMismatch);
+        } while(restartNode != null && result.getElem().isMismatch);
 
         // edge case : nodes of T2 match the end of T1, but not all nodes of T2 are traversed.
         // we traverse one more time and check that the final node in T2 will be null, implying the entire T2 was traversed
