@@ -153,6 +153,9 @@ public class DepthTraverser<A extends DepthTraverser.DepthAccumulator, E, N exte
         public int getDepth() {
             return depth;
         }
+        public void setDepth(int depth) {
+            this.depth = depth;
+        }
     }
 
 }
