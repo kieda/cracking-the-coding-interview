@@ -38,7 +38,7 @@ public class CheckBalanced {
             return a;
         })).getElem();
 
-        // everthing should be filled, except for the last row (which may be partially full)
+        // everything should be filled, except for the last row (which may be partially full)
         int expectedFill = 1;
         for(int depth = 0; depth < depthCounts.size() - 1; depth++) {
             if(!(expectedFill == depthCounts.get(depth)))

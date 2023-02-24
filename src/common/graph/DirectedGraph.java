@@ -20,6 +20,14 @@ public class DirectedGraph<V, E> {
     private Map<Tuple2<Vertex, Vertex>, Edge> edges;
     private Map<Vertex, Set<Edge>> graph;
 
+
+    public Map<Vertex, Set<Vertex>> getVertexMap() {
+        return vertices;
+    }
+    public Set<Vertex> getVertices() {
+        return vertices.keySet();
+    }
+
     /**
      * if false, we can have multiple vertices with the same data but will be represented by different vertices.
      * The library user needs to keep track of the vertex pointers in this case. This is mainly useful if we want to
