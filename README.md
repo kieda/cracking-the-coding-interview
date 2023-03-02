@@ -20,3 +20,6 @@ stack of plates implementation that has amortized O(1) removal from the middle n
 
 ## chapter4.FirstCommonAncestor
 Finds the common ancestor between two nodes, without using links to parents. Unlike the book solution, this only uses O(1) space, and runs in the same runtime complexity. This solution modifies the Morris traversal to find the ancestor's nodes
+
+## chapter4.CheckSubtree
+Checks if one tree is a subtree of another. Runs with O(1) space, which is more optimal than the book solution
