@@ -1,4 +1,4 @@
-package scratch;
+package hackerrank.decibinary;
 
 import common.tuple.Tuple2;
 

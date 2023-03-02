@@ -1,4 +1,4 @@
-package scratch;
+package hackerrank;
 
 import java.util.HashMap;
 import java.util.List;
