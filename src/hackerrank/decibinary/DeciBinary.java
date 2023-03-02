@@ -6,14 +6,28 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * Wizard-level solution to convert an index to its DeciBinary representation.
+ * Decibinary is a combination of decimal and binary numbers that follows the pattern
+ *     [0-9]2^0 + [0-9]2^1 + ... + [0-9]2^n
+ * This solution is in O(log n), which is better than any other solution I've found so far.
+ * It can calculate the result for 10^7 in 1.25 milliseconds, and 10^18 in about 92 millis.
+ * It also uses an astoundingly small amount of space in its memoization, 10^7 only uses 277 items.
  *
+ * HackerRank Link:
+ *     https://www.hackerrank.com/challenges/decibinary-numbers/problem
+ * StackExchange Link (my writeup on this solution):
+ *     https://math.stackexchange.com/questions/3540243/whats-the-number-of-decibinary-numbers-that-evaluate-to-given-decimal-number/4650820#4650820
  */
 public class DeciBinary {
     private static List<Long> memo = new ArrayList<>();
     private static List<Long> cumulative = new ArrayList<>();
     private static Map<Integer, Long> pow5 = new HashMap<>();
 
-    static long decibinaryIndex(long decibinaryIndex) {
+    /**
+     * Converts an index to its decibinary representation.
+     * Super fast!
+     */
+    public static long getDecibinaryFromIndex(long decibinaryIndex) {
         // find the decimal representation of our index
 
         // binary search in cumulative to find the decimal and the currentSize
@@ -68,7 +82,18 @@ public class DeciBinary {
 
         return traverseDecibinary(decibinaryIndex, decimal, decibinaryMaxCombinationIdx(decimal), currentSize);
     }
-    static long traverseDecibinary(long targetIndex, long decimal, int k, long currentIndex) {
+
+    /**
+     * Recursion to calculate our decibinary representation
+     * Moves from currentIndex to targetIndex, jumping forward for each digit we're adding on to the final representation
+     * The indices help us pick what representation we will have at the end.
+     * @param targetIndex target index we will end up at
+     * @param decimal the decimal we're currently calculating
+     * @param k the maximum decibinary size representation of decimal, gets smaller during recursion
+     * @param currentIndex our current index
+     * @return the decibinary representation
+     */
+    private static long traverseDecibinary(long targetIndex, long decimal, int k, long currentIndex) {
         if(k == 0) {
             long difference = Math.abs(targetIndex - currentIndex);
             if(difference >= 10)
@@ -112,7 +137,7 @@ public class DeciBinary {
      *      78 decibinary = 22 decimal
      * since we are zero-indexing, we return 1.
      */
-    static int decibinaryMinCombinationIdx(int decimal) {
+    private static int decibinaryMinCombinationIdx(int decimal) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(((decimal-1) / 9) + 1) - 1;
     }
 
@@ -122,7 +147,7 @@ public class DeciBinary {
      *    10006 decibinary = 22 decimal
      * since we are zero-indexing, we return 4.
      */
-    static int decibinaryMaxCombinationIdx(int decimal) {
+    private static int decibinaryMaxCombinationIdx(int decimal) {
         // 0 = 0*2^0
         if(decimal == 0)
             return 0;
@@ -136,6 +161,10 @@ public class DeciBinary {
     static long pow5(int k) {
         return pow(k, 5, pow5);
     }
+
+    /**
+     * memoized O(log(k)) solution to produce an integer exponent
+     */
     static long pow(int k, int exp, Map<Integer, Long> memo) {
         if(memo.containsKey(k))
             return memo.get(k);
@@ -154,7 +183,11 @@ public class DeciBinary {
         }
     }
 
-    static long decibinaryCountLengthCombinations(long decimal, int k) {
+    /**
+     * Counts the number of decibinary combinations there are for decimal with length (k+1)
+     * This is O(1)
+     */
+    private static long decibinaryCountLengthCombinations(long decimal, int k) {
         // edge case : 1 combination for zero at index 0
         if(decimal == 0 && k == 0)
             return 1;
@@ -203,8 +236,12 @@ public class DeciBinary {
         return 0L;
     }
 
-
-    static long decibinaryCount(int index) {
+    /**
+     * Counts the number of decibinary combinations there are for a given digit.
+     * For any even digit d, decibinaryCount(d) == decibinaryCount(d + 1)
+     * Thus, we only need to store even digits in our memo (and we do so.)
+     */
+    private static long decibinaryCount(int index) {
         // 0 ways to make negative numbers
         if(index < 0)
             return 0;
@@ -230,20 +267,20 @@ public class DeciBinary {
     public static void main(String[] args) {
         // this is incredibly fast, and doesn't use a lot of space!
         long time = System.currentTimeMillis();
-        System.out.println(decibinaryIndex(1000000000000000000L));
+        System.out.println(getDecibinaryFromIndex(1000000000000000000L));
         System.out.println(System.currentTimeMillis() - time);
         System.out.println(memo.size());
 
-        // test against dumb method
+        // randomized test against dumb method
         List<Long> table = decibinaryArray(10000000);
         for(int i = 0; i < 10000; i++) {
-            table.add(decibinaryIndex(i));
+            table.add(getDecibinaryFromIndex(i));
         }
         Random r = new Random();
         for(int i = 0; i < 100000; i++) {
             int pos = r.nextInt(10000);
             long expected = table.get(pos);
-            long actual = decibinaryIndex(pos);
+            long actual = getDecibinaryFromIndex(pos);
             if(expected != actual) {
                 throw new RuntimeException(i + " " + expected + " " + actual);
             }
@@ -273,9 +310,9 @@ public class DeciBinary {
     }
 
 
-    ///
-    // slow method, for comparison
-    ///
+    /////
+    // slow method, for testing purposes
+    /////
     public static long decibinaryNumbers(long x) {
         for(int digit = 0; digit <= x; digit++) {
             if(digit == 0) {
